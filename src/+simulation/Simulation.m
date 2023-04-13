@@ -20,8 +20,11 @@ AngleNoiseForm = 'Normal';
 AngleNoiseMu = 0;
 AngleNoiseSigma = 0;
 
+% make the results reproducible by seeding the random number generator
+rng(42);
+
 %% help function **********************************************************
-TransposeMatrix = @(Phi, Theta) [cosd(Phi).*sind(Theta); sind(Phi).*sind(Theta); cosd(Theta)];
+import utils.matrix_helpers.TransposeMatrix
 
 %% main loop **************************************************************
 t = 0:TimeRes:SimulationDuration;
@@ -32,10 +35,10 @@ xlabel('x'); ylabel('y'); zlabel('z');
 hold on
 grid minor
 for i = t
-    if exist('ax1','var')                                                  % remove old plot
-        pause(0.1)
-        delete([ax1,ax2,ax3]);
-    end
+    % if exist('ax1','var')                                                  % remove old plot
+    %     pause(0.01)
+    %     % delete([ax1,ax2,ax3]);
+    % end
     ax1 = plot3(TargetPos(:,1), TargetPos(:,2), TargetPos(:,3), 'b');
     ax2 = scatter3(TargetPos(end,1), TargetPos(end,2), TargetPos(end,3), 'filled', 'b');
     
