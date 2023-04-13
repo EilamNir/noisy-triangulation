@@ -60,12 +60,12 @@ import simulation.generate_path
 
 path1 = generate_path();
 path1.TimeRes = 0.1;
-path1.add_straight_interval(20, 90, 45);
-path1.add_straight_interval(10, 80, 45);
-path1.add_xy_turn_interval(10, 5, false);
+path1.add_straight_interval(20, theta=90, phi=45);
+path1.add_straight_interval(10, theta=80, phi=45);
+path1.add_xy_turn_interval(10, 5, override_theta=false);
 path1.add_xy_turn_interval(10, -5);
-path1.add_xy_turn_interval(20, 15, true, 100);
-path1.add_straight_interval(10, 90, 90);
+path1.add_xy_turn_interval(20, 15, override_theta=true, theta=100);
+path1.add_straight_interval(10, theta=90, phi=90);
 
 path_data = path1.path();
 
@@ -80,7 +80,7 @@ plot3(path_data(:,1), path_data(:,2), path_data(:,3), 'b.-');
 
 for i = [0, 45, 90]
     path2 = generate_path();
-    path2.add_straight_interval(20, 90, 45);
+    path2.add_straight_interval(20, theta=90, phi=45);
     path2.add_3d_turn_interval(20, 10, i)
     path2.add_straight_interval(30);
 

@@ -35,7 +35,7 @@ classdef generate_path < handle
             obj.path = obj.position;
         end
 
-        function add_straight_interval(obj, interval_duration, theta, phi)
+        function add_straight_interval(obj, interval_duration, options)
         %add_straight_interval - add a straight interval to the path
         %
         % Syntax: add_straight_interval(interval_duration)
@@ -46,15 +46,15 @@ classdef generate_path < handle
             arguments
                 obj
                 interval_duration
-                theta = obj.theta
-                phi = obj.phi
+                options.theta = obj.theta
+                options.phi = obj.phi
             end
-            obj.theta = theta;
-            obj.phi = phi;
+            obj.theta = options.theta;
+            obj.phi = options.phi;
             obj.advance_path(interval_duration, 0, 0);
         end
         
-        function add_xy_turn_interval(obj, interval_duration, rotation_speed, override_theta, theta)
+        function add_xy_turn_interval(obj, interval_duration, rotation_speed, options)
         %add_xy_turn_interval - add a turn in the x-y plane, with a constant theta
         %
         % Syntax: add_xy_turn_interval(obj, rotation_speed)
@@ -64,11 +64,11 @@ classdef generate_path < handle
                 obj
                 interval_duration
                 rotation_speed
-                override_theta = true
-                theta = 90
+                options.override_theta = true
+                options.theta = 90
             end
-            if override_theta
-                obj.theta = theta;
+            if options.override_theta
+                obj.theta = options.theta;
             end
             obj.advance_path(interval_duration, 0, rotation_speed);
             
