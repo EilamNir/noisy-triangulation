@@ -67,7 +67,7 @@ path1.add_xy_turn_interval(10, -5);
 path1.add_xy_turn_interval(20, 15, true, 100);
 path1.add_straight_interval(10, 90, 90);
 
-path_data = path1.get_path_data();
+path_data = path1.path();
 
 figure
 scatter3(SensorPos(:,1), SensorPos(:,2), SensorPos(:,3), 'filled', 'r');
@@ -84,7 +84,7 @@ for i = [0, 45, 90]
     path2.add_3d_turn_interval(20, 10, i)
     path2.add_straight_interval(30);
 
-    path_data = path2.get_path_data();
+    path_data = path2.path();
 
     figure
     scatter3(SensorPos(:,1), SensorPos(:,2), SensorPos(:,3), 'filled', 'r');

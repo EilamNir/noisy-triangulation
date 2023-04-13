@@ -35,25 +35,6 @@ classdef generate_path < handle
             obj.path = obj.position;
         end
 
-        function path_data = get_path_data(obj, no_copy)
-        %get_path_data - generate the full data of the path
-        %
-        % Syntax: path_data = get_path_data()
-        %
-        % Generate the true data of the path the target went trough.
-        % Before calling this function, the user must add intervals to the path.
-            arguments
-                obj
-                no_copy = true
-            end
-
-            if no_copy
-                path_data = obj.path;
-            else
-                path_data = copy(obj.path);
-            end
-        end
-
         function add_straight_interval(obj, interval_duration, theta, phi)
         %add_straight_interval - add a straight interval to the path
         %
