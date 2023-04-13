@@ -8,8 +8,12 @@ To run, open matlab in the `src` directory, and run the `src/+simulation/Simulat
 
 - [ ] Create a library for generating the true path of a target
   - [x] Support straight lines
-  - [ ] Support turns with constant radius on x-y plane and constant speed on z axis
-  - [ ] Support turn in 3 dimensions with constant radius
+  - [x] Support turns with constant radius on x-y plane and constant speed on z axis
+  - [x] Support turn in 3 dimensions with constant radius
+  - [ ] allow acceleration in all intervals
+    - [ ] in direction of motion
+    - [ ] in x-y plane only
+    - [ ] in z axis only
 - [ ] Create library to extract noisy measurements from true path
   - [ ] support multiple sensors
   - [ ] allow choosing which measurements to the target to get:

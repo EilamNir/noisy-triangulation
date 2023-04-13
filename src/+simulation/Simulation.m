@@ -23,9 +23,6 @@ AngleNoiseSigma = 0;
 % make the results reproducible by seeding the random number generator
 rng(42);
 
-%% help function **********************************************************
-import utils.matrix_helpers.TransposeMatrix
-
 % %% main loop **************************************************************
 % t = 0:TimeRes:SimulationDuration;
 % figure
@@ -61,17 +58,16 @@ import utils.matrix_helpers.TransposeMatrix
 % generate a path
 import simulation.generate_path
 
-path = generate_path([0,0,0], [0,45]);
-path.add_straight_interval(20);
-path.temp_should_test_curve = true;
-path.add_straight_interval(10);
-path.temp_should_test_curve = false;
-path.add_straight_interval(30);
-path.phi = 90;
-path.theta = 90;
-path.add_straight_interval(10);
+path1 = generate_path();
+path1.TimeRes = 0.1;
+path1.add_straight_interval(20, 90, 45);
+path1.add_straight_interval(10, 80, 45);
+path1.add_xy_turn_interval(10, 5, false);
+path1.add_xy_turn_interval(10, -5);
+path1.add_xy_turn_interval(20, 15, true, 100);
+path1.add_straight_interval(10, 90, 90);
 
-path_data = path.get_path_data();
+path_data = path1.get_path_data();
 
 figure
 scatter3(SensorPos(:,1), SensorPos(:,2), SensorPos(:,3), 'filled', 'r');
@@ -80,3 +76,21 @@ hold on
 grid minor
 xlabel('x'); ylabel('y'); zlabel('z');
 plot3(path_data(:,1), path_data(:,2), path_data(:,3), 'b.-');
+
+
+for i = [0, 45, 90]
+    path2 = generate_path();
+    path2.add_straight_interval(20, 90, 45);
+    path2.add_3d_turn_interval(20, 10, i)
+    path2.add_straight_interval(30);
+
+    path_data = path2.get_path_data();
+
+    figure
+    scatter3(SensorPos(:,1), SensorPos(:,2), SensorPos(:,3), 'filled', 'r');
+    % axis([-500 500 -500 500 -500 500]);
+    hold on
+    grid minor
+    xlabel('x'); ylabel('y'); zlabel('z');
+    plot3(path_data(:,1), path_data(:,2), path_data(:,3), 'b.-');
+end

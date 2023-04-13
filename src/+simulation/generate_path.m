@@ -1,39 +1,38 @@
 classdef generate_path < handle
     properties
-        phi
         theta
+        phi
         position
         speed
         acceleration
         TimeRes
-        temp_should_test_curve % TODO: Remove me
         path
     end
     methods
-        function obj = generate_path(initial_position, initial_heading, initial_speed, TimeRes)
+        function obj = generate_path(initial_position, initial_theta, initial_phi, initial_speed, TimeRes)
         %generate_path - generate a path made out of intervals of different types
         %
-        % Syntax: obj = generate_path(initial_position, initial_heading)
+        % Syntax: obj = generate_path(initial_position, initial_theta, initial_phi, initial_speed, TimeRes)
         %
-        % generate a path of different intervals.
+        % Generate a path of different intervals.
         % The path will start from initial_position (defaults to [0,0,0]), 
-        % and will grow towards initial_heading (defaults to [phi=0,theta=0]).
+        % and will grow towards [theta, phi] (defaults to [theta=0, phi=0]).
         % The initial speed of the target is indicated at initial_speed (defaults to 50).
         % TimeRes defaults to 0.5.
             arguments
                 initial_position = [0,0,0]
-                initial_heading = [0,0]
+                initial_theta = 90
+                initial_phi = 0
                 initial_speed = 50
                 TimeRes = 0.5
             end
             obj.position = initial_position;
-            obj.phi = initial_heading(1);
-            obj.theta = initial_heading(2);
+            obj.theta = initial_theta;
+            obj.phi = initial_phi;
             obj.speed = initial_speed;
             obj.acceleration = 0;
             obj.TimeRes = TimeRes;
             obj.path = obj.position;
-            obj.temp_should_test_curve = false; % TODO: Remove me
         end
 
         function path_data = get_path_data(obj, no_copy)
@@ -55,44 +54,77 @@ classdef generate_path < handle
             end
         end
 
-        function add_straight_interval(obj, interval_duration, should_zero_pitch)
+        function add_straight_interval(obj, interval_duration, theta, phi)
         %add_straight_interval - add a straight interval to the path
         %
         % Syntax: add_straight_interval(interval_duration)
         %
         % Add a straight interval to the path.
         % interval_duration is the total length of the path to add.
-        % if should_zero_pitch is true, the straight interval will be only in the x-y plane.
+        % If any of theta or phi are given, the heading will change before the interval.
             arguments
                 obj
                 interval_duration
-                should_zero_pitch = false
+                theta = obj.theta
+                phi = obj.phi
             end
+            obj.theta = theta;
+            obj.phi = phi;
+            obj.advance_path(interval_duration, 0, 0);
+        end
+        
+        function add_xy_turn_interval(obj, interval_duration, rotation_speed, override_theta, theta)
+        %add_xy_turn_interval - add a turn in the x-y plane, with a constant theta
+        %
+        % Syntax: add_xy_turn_interval(obj, rotation_speed)
+        %
+        % Add a turn interval, which has a constant radius, and can climb or descend in the z axis.
+            arguments
+                obj
+                interval_duration
+                rotation_speed
+                override_theta = true
+                theta = 90
+            end
+            if override_theta
+                obj.theta = theta;
+            end
+            obj.advance_path(interval_duration, 0, rotation_speed);
             
-            if should_zero_pitch
-               error("unimplemented") ;
-            else
-                obj.advance_path(interval_duration);
-            end
         end
 
-        function advance_path(obj, interval_duration)
+        function add_3d_turn_interval(obj, interval_duration, rotation_speed, angle)
+            %add_3d_turn_interval - add a turn in 3 dimensions
+            %
+            % Syntax: add_3d_turn_interval(obj, interval_duration, rotation_speed, angle)
+            %
+            % Add a turn interval, which has a constant radius.
+            % The angle controls the direction of the turn.
+            % angle of 0 means pitching up, and angle of 90 means turning fully right.
+                arguments
+                    obj
+                    interval_duration
+                    rotation_speed
+                    angle
+                end
+                obj.advance_path(interval_duration, rotation_speed*cosd(angle), rotation_speed*sind(angle));
+                
+            end
+
+        function advance_path(obj, interval_duration, theta_rotation_speed, phi_rotation_speed)
         %advance_path - internal function to advance the path
         %
         % Syntax: advance_path(interval_duration)
         %
-        % advance the path using the current position, speed and acceleration
+        % advance the path using the current position and speed
             import utils.matrix_helpers.TransposeMatrix
             t = 0:obj.TimeRes:interval_duration;
             for i = t
                 obj.position = obj.position + (obj.TimeRes * obj.speed .* TransposeMatrix(obj.phi, obj.theta))';
                 obj.path(end+1,:) = obj.position;
 
-                % TODO: Remove this, it's here for testing only
-                if obj.temp_should_test_curve
-                    obj.theta = obj.theta - obj.TimeRes*5;
-                end
-
+                obj.theta = mod(obj.theta - obj.TimeRes * theta_rotation_speed, 360);
+                obj.phi = mod(obj.phi - obj.TimeRes * phi_rotation_speed, 360);
             end
         end
     end
