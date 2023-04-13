@@ -10,50 +10,8 @@ SimulationDuration = 150;
 TargetTheta = 90;
 TargetPhi = 45;
 
-
-%% noise ******************************************************************
-DistanceNoiseForm = 'Normal';
-DistanceNoiseMu = 0;
-DistanceNoiseSigma = 10;
-
-AngleNoiseForm = 'Normal';
-AngleNoiseMu = 0;
-AngleNoiseSigma = 0;
-
 % make the results reproducible by seeding the random number generator
 rng(42);
-
-% %% main loop **************************************************************
-% t = 0:TimeRes:SimulationDuration;
-% figure
-% scatter3(SensorPos(:,1), SensorPos(:,2), SensorPos(:,3), 'filled', 'r');
-% axis([-500 500 -500 500 -500 500])
-% xlabel('x'); ylabel('y'); zlabel('z');
-% hold on
-% grid minor
-% for i = t
-%     % if exist('ax1','var')                                                  % remove old plot
-%     %     pause(0.01)
-%     %     % delete([ax1,ax2,ax3]);
-%     % end
-%     ax1 = plot3(TargetPos(:,1), TargetPos(:,2), TargetPos(:,3), 'b');
-%     ax2 = scatter3(TargetPos(end,1), TargetPos(end,2), TargetPos(end,3), 'filled', 'b');
-    
-%     TargetPos(end+1,:) = TargetPos(end,:) + (TimeRes*TargetSpeed.*TransposeMatrix(TargetPhi, TargetTheta))';
-    
-%     % Target execute loop 
-%     if i > 40 && i < 40+54.5
-%        TargetTheta = TargetTheta - TimeRes*TargetRotSpeed;
-%     end
-    
-%     % sensor prediction 
-%     PredictDistance = vecnorm(TargetPos(end,:)-SensorPos,2,2) + random(DistanceNoiseForm, DistanceNoiseMu, DistanceNoiseSigma);
-%     PredictAnglePhi = atan2d(TargetPos(end,2)-SensorPos(:,2),TargetPos(end,1)-SensorPos(:,1)) + random(AngleNoiseForm, AngleNoiseMu, AngleNoiseSigma);
-%     PredictAngleTheta = atan2d(norm(TargetPos(end,1:2)-SensorPos(:,1:2)),TargetPos(end,3)-SensorPos(:,3)) + random(AngleNoiseForm, AngleNoiseMu, AngleNoiseSigma);
-%     PredictTargetPos = SensorPos + PredictDistance.*reshape(TransposeMatrix(PredictAnglePhi, PredictAngleTheta),[],3);
-    
-%     ax3 = plot3(PredictTargetPos(:,1), PredictTargetPos(:,2), PredictTargetPos(:,3), '*k'); 
-% end
 
 %% generate a path
 import simulation.generate_path
@@ -69,10 +27,9 @@ path1.add_xy_turn_interval(20, 15, override_theta=true, theta=100);
 path1.add_straight_interval(10, theta=90, phi=90);
 
 figure
-scatter3(SensorPos(:,1), SensorPos(:,2), SensorPos(:,3), 'filled', 'r');
-% axis([-500 500 -500 500 -500 500]);
 hold on
 grid minor
+view([-37.5 30]);
 xlabel('x'); ylabel('y'); zlabel('z');
 plot3(path1.path(:,1), path1.path(:,2), path1.path(:,3), 'b.-');
 
@@ -85,10 +42,9 @@ for i = [0, 45, 90]
     path2.add_straight_interval(30);
 
     figure
-    scatter3(SensorPos(:,1), SensorPos(:,2), SensorPos(:,3), 'filled', 'r');
-    % axis([-500 500 -500 500 -500 500]);
     hold on
     grid minor
+    view([-37.5 30]);
     xlabel('x'); ylabel('y'); zlabel('z');
     plot3(path2.path(:,1), path2.path(:,2), path2.path(:,3), 'b.-');
 end
@@ -97,19 +53,34 @@ end
 import simulation.noisy_sensor
 
 sensor1 = noisy_sensor(SensorPos, has_distance=true, has_angle=true, distance_noise_sigma=50);
-sensor1.calculate_measurements(path1.path)
+sensor2_pos = [1500,1600,150];
+sensor2 = noisy_sensor(sensor2_pos, has_distance=true, has_angle=true, distance_noise_sigma=50);
+sensor3_pos = [-310,10,0];
+sensor3 = noisy_sensor(sensor3_pos, has_distance=true, has_angle=true, phi_noise_sigma=1, theta_noise_sigma=1);
+sensor4_pos = [1510,1610,150];
+sensor4 = noisy_sensor(sensor4_pos, has_distance=true, has_angle=true, phi_noise_sigma=1, theta_noise_sigma=1);
 
-% get back the estimation of the target
-import utils.matrix_helpers.TransposeMatrix
-noisy_positions = SensorPos + sensor1.noisy_distances .* (TransposeMatrix(sensor1.noisy_phis, sensor1.noisy_thetas)');
-perfect_positions = SensorPos + sensor1.perfect_distances .* (TransposeMatrix(sensor1.perfect_phis, sensor1.perfect_thetas)');
+sensor_list = [sensor1, sensor2, sensor3, sensor4];
+color_list = ['r', 'g', 'y', 'c'];
 
 figure
-scatter3(SensorPos(:,1), SensorPos(:,2), SensorPos(:,3), 'filled', 'r');
-% axis([-500 500 -500 500 -500 500]);
-hold on
+hold on 
 grid minor
+view([-37.5 30]);
 xlabel('x'); ylabel('y'); zlabel('z');
 plot3(path1.path(:,1), path1.path(:,2), path1.path(:,3), 'b.-');
-plot3(noisy_positions(:,1), noisy_positions(:,2), noisy_positions(:,3), '*k');
-plot3(perfect_positions(:,1), perfect_positions(:,2), perfect_positions(:,3), '^g');
+
+for i = 1:size(sensor_list, 2)
+    sensor = sensor_list(i);
+    color = color_list(i);
+    sensor.calculate_measurements(path1.path);
+
+    % convert sensor output back to estimated positions
+    import utils.matrix_helpers.TransposeMatrix
+    noisy_positions = sensor.sensor_position + sensor.noisy_distances .* (TransposeMatrix(sensor.noisy_phis, sensor.noisy_thetas)');
+    perfect_positions = sensor.sensor_position + sensor.perfect_distances .* (TransposeMatrix(sensor.perfect_phis, sensor.perfect_thetas)');
+
+    scatter3(sensor.sensor_position(:,1), sensor.sensor_position(:,2), sensor.sensor_position(:,3), 'filled', color);
+    plot3(noisy_positions(:,1), noisy_positions(:,2), noisy_positions(:,3), ['*' color]);
+    % plot3(perfect_positions(:,1), perfect_positions(:,2), perfect_positions(:,3), '^g');
+end

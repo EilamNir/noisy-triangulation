@@ -16,10 +16,12 @@ To run, open matlab in the `src` directory, and run the `src/+simulation/Simulat
     - [ ] in z axis only
 - [ ] Create library to extract noisy measurements from true path
   - [ ] support multiple sensors
-  - [ ] allow choosing which measurements to the target to get:
-    - [ ] distance
-    - [ ] angles
-  - [ ] allow adding normal noise to the measurements
+  - [x] allow choosing which measurements to the target to get:
+    - [x] distance
+    - [x] angles
+  - [x] allow adding normal noise to the measurements
+  - [ ] add option for noise to increase based on distance
+  - [ ] allow extracting only every other sample (or every X sample)
   - [ ] allow adding outlier noise to measurements
   - [ ] allow adding bias to measurements
   - [ ] allow dropping measurements at random
