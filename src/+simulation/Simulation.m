@@ -55,11 +55,12 @@ rng(42);
 %     ax3 = plot3(PredictTargetPos(:,1), PredictTargetPos(:,2), PredictTargetPos(:,3), '*k'); 
 % end
 
-% generate a path
+%% generate a path
 import simulation.generate_path
 
+%% test straight lines and xy turns
 path1 = generate_path();
-path1.TimeRes = 0.1;
+% path1.TimeRes = 0.1;
 path1.add_straight_interval(20, theta=90, phi=45);
 path1.add_straight_interval(10, theta=80, phi=45);
 path1.add_xy_turn_interval(10, 5, override_theta=false);
@@ -67,24 +68,21 @@ path1.add_xy_turn_interval(10, -5);
 path1.add_xy_turn_interval(20, 15, override_theta=true, theta=100);
 path1.add_straight_interval(10, theta=90, phi=90);
 
-path_data = path1.path();
-
 figure
 scatter3(SensorPos(:,1), SensorPos(:,2), SensorPos(:,3), 'filled', 'r');
 % axis([-500 500 -500 500 -500 500]);
 hold on
 grid minor
 xlabel('x'); ylabel('y'); zlabel('z');
-plot3(path_data(:,1), path_data(:,2), path_data(:,3), 'b.-');
+plot3(path1.path(:,1), path1.path(:,2), path1.path(:,3), 'b.-');
 
 
+%% test 3d turns
 for i = [0, 45, 90]
     path2 = generate_path();
     path2.add_straight_interval(20, theta=90, phi=45);
     path2.add_3d_turn_interval(20, 10, i)
     path2.add_straight_interval(30);
-
-    path_data = path2.path();
 
     figure
     scatter3(SensorPos(:,1), SensorPos(:,2), SensorPos(:,3), 'filled', 'r');
@@ -92,5 +90,26 @@ for i = [0, 45, 90]
     hold on
     grid minor
     xlabel('x'); ylabel('y'); zlabel('z');
-    plot3(path_data(:,1), path_data(:,2), path_data(:,3), 'b.-');
+    plot3(path2.path(:,1), path2.path(:,2), path2.path(:,3), 'b.-');
 end
+
+% test sensors
+import simulation.noisy_sensor
+
+sensor1 = noisy_sensor(SensorPos, has_distance=true, has_angle=true, distance_noise_sigma=50);
+sensor1.calculate_measurements(path1.path)
+
+% get back the estimation of the target
+import utils.matrix_helpers.TransposeMatrix
+noisy_positions = SensorPos + sensor1.noisy_distances .* (TransposeMatrix(sensor1.noisy_phis, sensor1.noisy_thetas)');
+perfect_positions = SensorPos + sensor1.perfect_distances .* (TransposeMatrix(sensor1.perfect_phis, sensor1.perfect_thetas)');
+
+figure
+scatter3(SensorPos(:,1), SensorPos(:,2), SensorPos(:,3), 'filled', 'r');
+% axis([-500 500 -500 500 -500 500]);
+hold on
+grid minor
+xlabel('x'); ylabel('y'); zlabel('z');
+plot3(path1.path(:,1), path1.path(:,2), path1.path(:,3), 'b.-');
+plot3(noisy_positions(:,1), noisy_positions(:,2), noisy_positions(:,3), '*k');
+plot3(perfect_positions(:,1), perfect_positions(:,2), perfect_positions(:,3), '^g');
