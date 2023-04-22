@@ -1,0 +1,73 @@
+# Meeting Notes
+
+## 2023-04-19 meeting notes
+
+- Need to have two types of path sections:
+  - straight line in any 3d direction
+    - Constant speed in all directions
+    - later add option of constant acceleration in z direction (but keep speed continues)
+  - X-Y turn
+    - constant radius of turn in xy plane
+    - speed in xy plane should stay constant
+    - constant z speed
+    - arguments for generating the section:
+      - turn degrees per second - about 3 [deg/sec]
+        - probably want this in radians per second
+      - XY speed (should default to keep the same speed it had before) - about 50 [m/s]
+      - Z speed (should default to keep the same speed it had before) - about 10 [m/s] or less
+      - section length in seconds
+        - maybe add an option to use length or total degrees turned, to help make creating this section not depend on speed calculation outside the function
+- Work with radians instead of degrees
+- Work with Azimuth and Elevation instead of $\phi$ and $\theta$
+- Sensors
+  - Each sensor should have:
+    - range
+      - normal noise should have sigma of about 10 to 20 meters
+    - Azimuth (from north direction) and Elevation (north should be down, meaning z grows downwards)
+      - Elevation should be between $[0-\pi]$
+      - Azimuth should be calculated as $arctan(\frac{\Delta y}{\Delta x})$ where x is range and y is yaw
+        - The right handed coordinates are: (East, North, Up)
+      - normal noise for both should have sigma of about 5 milliradians
+  - At first, all sensors should only measure range
+    - later have multiple sensors of different types working together
+  - Currently the sigma of each sensor will be known to our estimation algorithm
+  - Currently the info we get from the sensors should be synchronized (both to each other and to the true value)
+    - Later add a delay from the true position to the sensor position
+      - maybe make it also depend on range, and make the delay noisy?
+    - Later add dropped measurements
+      - means we probably already need to add a time tag to each sensor measurement
+  - Sensors should have measurement speed of 1 to 5 Hz
+    - Probably make it a parameter per sensor
+    - The true target position should probably update more frequently
+- Sensor positioning:
+  - first sensor about 5 km before path starting point
+  - second sensor about 5 to 10 km after ending point
+  - other sensors (at least one) in arbitrary points
+  - all sensors should be on ground level
+- Location Estimations
+  - Implement estimations for generic heterogeneous sensors from the start
+  - At first only estimate one point at a time, from all data available from the sensors about this point, without taking into account the speed or any other info about the previous points
+  - Estimation principles:
+    - $y$ is a vector of measurements (ranges and angles from multiple sensors)
+    - $x$ is the true position vector
+    - $y$ can be obtained as $y=h(x) + v$ where $h$ is some general function
+    - the linear estimator is: $\hat{x} = {argmin}_x(||y-Hx||^2)$
+      - the solution is $\hat{x}_{LS} = (HH^\dagger)^{-1} H^\dagger y$
+    - non-linear estimations:
+      - to get a non-linear estimator, we need to use a taylor series of first order of $h$, and an initial guess $x_0$ to expand the series around
+        - in our case, the initial guess $x_0$ for the first point in the path will be the true point of the target, and $x_0$ for all other points will be the last estimated position.
+      - to get the estimate, we will use the equation $y \approx h(x_0) + \frac{\partial h}{\partial x}\big |_{x=x_0} (x-x_0)$
+      - we will define $H=\frac{\partial h}{\partial x}\big |_{x=x_0}$
+      - our solution is now to use regular least-squares for minimizing $y-h(x_0)=H(x-x_0)$
+      - we can iterate over this function, each time using the last calculated $x$ as $x_0$
+        - for range sensors, this should usually converge after about 3 iterations
+        - for angle sensors it might take a longer time to converge
+          - we need to remember to keep the angles between $Az \in [0, 2 \pi], Elevation \in [0, \pi]$
+      - we need to calculate $cov(\hat{\Delta x}) = cov(\hat{x}-x_0)=cov((HH^\dagger)^{-1} H^\dagger \Delta y)=Jcov(\Delta y)J^\dagger$
+        - we defined $J = (HH^\dagger)^{-1} H^\dagger$ as $J$ is constant and can be calculated ahead of time once
+- CRML project definition report
+  - take tasks from initial mail and fill in appropriate dates for tasks gantt
+    - add filtering as a task
+  - main reference will be the book from the first mail
+    - other references will be added later when we decide on what to continue with
+  - no need to spend too much time on this report
