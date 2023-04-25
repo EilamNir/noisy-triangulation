@@ -1,7 +1,7 @@
 close all; clear; clc;
 %% simulation settings ****************************************************
 %SensorPos = [-300,0,0;-100 -100 -100];
-SensorPos = [-300,0,0];
+SensorPos = [-5000,0,0; 400, -7400, 0; 800, 800, 0];
 TargetPos = [0,0,0];
 TargetSpeed = 10;
 TargetRotSpeed = 5;
@@ -48,37 +48,48 @@ plot3(path1.path(:,1), path1.path(:,2), path1.path(:,3), 'b.-');
 % end
 
 % % test sensors
-% import simulation.noisy_sensor
+import simulation.noisy_sensor
 
-% sensor1 = noisy_sensor(SensorPos, "has_distance", true, "has_angle", true, "distance_noise_sigma", 50);
-% sensor2_pos = [1500,1600,150];
-% sensor2 = noisy_sensor(sensor2_pos, "has_distance", true, "has_angle", true, "distance_noise_sigma", 50);
-% sensor3_pos = [-310,10,0];
-% sensor3 = noisy_sensor(sensor3_pos, "has_distance", true, "has_angle", true, "phi_noise_sigma", 1, "theta_noise_sigma", 1);
-% sensor4_pos = [1510,1610,150];
-% sensor4 = noisy_sensor(sensor4_pos, "has_distance", true, "has_angle", true, "phi_noise_sigma", 1, "theta_noise_sigma", 1);
+sensor_distance1_pos = [-5000,0,0];
+sensor_distance1 = noisy_sensor(sensor_distance1_pos, "has_distance", true, "has_angle", false, "distance_noise_sigma", 15);
+sensor_distance2_pos = [400, -7400, 0];
+sensor_distance2 = noisy_sensor(sensor_distance2_pos, "has_distance", true, "has_angle", false, "distance_noise_sigma", 15);
+sensor_distance3_pos = [800, 800, 0];
+sensor_distance3 = noisy_sensor(sensor_distance3_pos, "has_distance", true, "has_angle", false, "distance_noise_sigma", 15);
 
-% sensor_list = [sensor1, sensor2, sensor3, sensor4];
-% color_list = ['r', 'g', 'y', 'c'];
+sensor_angle1_pos = [-5000,0,0];
+sensor_angle1 = noisy_sensor(sensor_angle1_pos, "has_distance", false, "has_angle", true, "theta_noise_sigma", 5, "theta_noise_sigma", 5);
+sensor_angle2_pos = [400, -7400, 0];
+sensor_angle2 = noisy_sensor(sensor_angle2_pos, "has_distance", false, "has_angle", true, "theta_noise_sigma", 5, "theta_noise_sigma", 5);
+sensor_angle3_pos = [800, 800, 0];
+sensor_angle3 = noisy_sensor(sensor_angle3_pos, "has_distance", false, "has_angle", true, "theta_noise_sigma", 5, "theta_noise_sigma", 5);
 
-% figure
-% hold on 
-% grid minor
-% view([-37.5 30]);
-% xlabel('x'); ylabel('y'); zlabel('z');
-% plot3(path1.path(:,1), path1.path(:,2), path1.path(:,3), 'b.-');
+sensor_list = [sensor_distance1, sensor_distance2, sensor_distance3];
+% sensor_list = [sensor_angle1, sensor_angle2, sensor_angle3];
+color_list = ['r', 'g', 'y'];
 
-% for i = 1:size(sensor_list, 2)
-%     sensor = sensor_list(i);
-%     color = color_list(i);
-%     sensor.calculate_measurements(path1.path);
+figure
+hold on 
+grid minor
+view([-37.5 30]);
+xlim([min(path1.path(:,1))-10 max(path1.path(:,1))+10]);
+ylim([min(path1.path(:,2))-10 max(path1.path(:,2))+10]);
+zlim([min(path1.path(:,3))-10 max(path1.path(:,3))+10]);
+xlabel('x'); ylabel('y'); zlabel('z');
+plot3(path1.path(:,1), path1.path(:,2), path1.path(:,3), 'b.-');
 
-%     % convert sensor output back to estimated positions
-%     import utils.matrix_helpers.TransposeMatrix
-%     noisy_positions = sensor.sensor_position + sensor.noisy_distances .* (TransposeMatrix(sensor.noisy_phis, sensor.noisy_thetas)');
-%     perfect_positions = sensor.sensor_position + sensor.perfect_distances .* (TransposeMatrix(sensor.perfect_phis, sensor.perfect_thetas)');
+for i = 1:size(sensor_list, 2)
+    sensor = sensor_list(i);
+    color = color_list(i);
+    sensor.calculate_measurements(path1.path);
 
-%     scatter3(sensor.sensor_position(:,1), sensor.sensor_position(:,2), sensor.sensor_position(:,3), 'filled', color);
-%     plot3(noisy_positions(:,1), noisy_positions(:,2), noisy_positions(:,3), ['*' color]);
-%     % plot3(perfect_positions(:,1), perfect_positions(:,2), perfect_positions(:,3), '^g');
-% end
+    % convert sensor output back to estimated positions
+    % import utils.matrix_helpers.TransposeMatrix3d
+    % noisy_positions = sensor.sensor_position + sensor.noisy_distances .* (TransposeMatrix3d(sensor.noisy_phis, sensor.noisy_thetas)');
+    % perfect_positions = sensor.sensor_position + sensor.perfect_distances .* (TransposeMatrix3d(sensor.perfect_phis, sensor.perfect_thetas)');
+
+    % scatter3(sensor.sensor_position(:,1), sensor.sensor_position(:,2), sensor.sensor_position(:,3), 'filled', color);
+    % plot3(noisy_positions(:,1), noisy_positions(:,2), noisy_positions(:,3), ['*' color]);
+    % plot3(perfect_positions(:,1), perfect_positions(:,2), perfect_positions(:,3), '^g');
+end
+
