@@ -1,15 +1,15 @@
 classdef generate_path < handle
     properties
-        theta
         phi
         position
-        speed
+        speed_xy
+        speed_z
         acceleration
         TimeRes
         path
     end
     methods
-        function obj = generate_path(initial_position, initial_theta, initial_phi, initial_speed, TimeRes)
+        function obj = generate_path(options)
         %generate_path - generate a path made out of intervals of different types
         %
         % Syntax: obj = generate_path(initial_position, initial_theta, initial_phi, initial_speed, TimeRes)
@@ -20,18 +20,18 @@ classdef generate_path < handle
         % The initial speed of the target is indicated at initial_speed (defaults to 50).
         % TimeRes defaults to 0.5.
             arguments
-                initial_position = [0,0,0]
-                initial_theta = 90
-                initial_phi = 0
-                initial_speed = 50
-                TimeRes = 0.5
+                options.initial_position = [0,0,0]
+                options.initial_phi = 0 % rad
+                options.initial_speed_xy = 50 % m/s
+                options.initial_speed_z = 10 % m/s
+                options.TimeRes = 0.1 % s
             end
-            obj.position = initial_position;
-            obj.theta = initial_theta;
-            obj.phi = initial_phi;
-            obj.speed = initial_speed;
+            obj.position = options.initial_position;
+            obj.phi = options.initial_phi;
+            obj.speed_xy = options.initial_speed_xy;
+            obj.speed_z = options.initial_speed_z;
             obj.acceleration = 0;
-            obj.TimeRes = TimeRes;
+            obj.TimeRes = options.TimeRes;
             obj.path = obj.position;
         end
 
@@ -46,10 +46,8 @@ classdef generate_path < handle
             arguments
                 obj
                 interval_duration
-                options.theta = obj.theta
                 options.phi = obj.phi
             end
-            obj.theta = options.theta;
             obj.phi = options.phi;
             obj.advance_path(interval_duration, 0, 0);
         end
@@ -62,15 +60,11 @@ classdef generate_path < handle
         % Add a turn interval, which has a constant radius, and can climb or descend in the z axis.
             arguments
                 obj
-                interval_duration
-                rotation_speed
-                options.override_theta = true
-                options.theta = 90
+                interval_duration % seconds
+                rotation_speed % radians per second
+                options.z_acceleration = 0 % m/s^2
             end
-            if options.override_theta
-                obj.theta = options.theta;
-            end
-            obj.advance_path(interval_duration, 0, rotation_speed);
+            obj.advance_path(interval_duration, options.z_acceleration, rotation_speed);
             
         end
 
@@ -88,24 +82,24 @@ classdef generate_path < handle
                     rotation_speed
                     angle
                 end
-                obj.advance_path(interval_duration, rotation_speed*cosd(angle), rotation_speed*sind(angle));
+                obj.advance_path(interval_duration, rotation_speed*cos(angle), rotation_speed*sin(angle));
                 
             end
 
-        function advance_path(obj, interval_duration, theta_rotation_speed, phi_rotation_speed)
+        function advance_path(obj, interval_duration, z_acceleration, phi_rotation_speed)
         %advance_path - internal function to advance the path
         %
         % Syntax: advance_path(interval_duration)
         %
         % advance the path using the current position and speed
-            import utils.matrix_helpers.TransposeMatrix
-            t = 0:obj.TimeRes:interval_duration;
+            import utils.matrix_helpers.TransposeMatrix2d
+            t = obj.TimeRes:obj.TimeRes:interval_duration;
             for i = t
-                obj.position = obj.position + (obj.TimeRes * obj.speed .* TransposeMatrix(obj.phi, obj.theta))';
+                obj.position(1:2) = obj.position(1:2) + (obj.TimeRes * obj.speed_xy .* TransposeMatrix2d(obj.phi))';
+                obj.position(3) = obj.position(3) + (obj.TimeRes * obj.speed_z);
                 obj.path(end+1,:) = obj.position;
 
-                obj.theta = mod(obj.theta - obj.TimeRes * theta_rotation_speed, 360);
-                obj.phi = mod(obj.phi - obj.TimeRes * phi_rotation_speed, 360);
+                obj.phi = mod(obj.phi - obj.TimeRes * phi_rotation_speed, 2*pi);
             end
         end
     end
