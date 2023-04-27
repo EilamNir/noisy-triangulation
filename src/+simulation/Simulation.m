@@ -117,3 +117,31 @@ it = iterative_estimator(sensor_list, temp_path(1,:));
 
 estimated_path = it.estimate_path_by_distance();
 display(estimated_path);
+
+%%
+% test estimator with working and non-working examples
+
+temp_path = [1,1,0; 0.5,0.5,0; 0,0,0,];
+% working
+sensor_pos = [0,0,1; 1,0,0; 0,1,0];
+get_path_from_sensor_pos(sensor_pos, temp_path);
+% non working
+sensor_pos = [0,0,0; 1,0,0; 0,1,0];
+get_path_from_sensor_pos(sensor_pos, temp_path);
+
+%% functions
+
+function estimated_path = get_path_from_sensor_pos(sensor_pos, path)
+    import simulation.noisy_sensor;
+    import estimation.iterative_estimator;
+    sensor_list = noisy_sensor.empty();
+    for i = 1:size(sensor_pos, 2)
+        sensor = noisy_sensor(sensor_pos(i,:), "has_distance", true, "has_angle", false, "distance_noise_sigma", 0.1);
+        sensor_list(i) = sensor;
+        sensor.calculate_measurements(path);
+    end
+
+    it = iterative_estimator(sensor_list, path(1,:));
+    estimated_path = it.estimate_path_by_distance();
+    display(estimated_path);
+end
