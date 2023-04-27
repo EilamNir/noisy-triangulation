@@ -11,18 +11,48 @@ classdef iterative_estimator < handle
             end
             obj.sensor_list = sensor_list;
             obj.last_location = initial_location_guess
+            % TODO: differentiate the functions in this init function and save symbolic functions for run time
         end
 
-        function distances = h(obj, sensor_locations, x_0)
-            distances = ((x_0(1) - sensor_locations(:,1)).^2 + (x_0(2) - sensor_locations(:,2)).^2 + (x_0(3) - sensor_locations(:,3)).^2).^0.5;
+        function [dist, Ddist] = get_distances(obj, sensor_locations, x0)
+            % when calculating by hand:
+            % distances = ((x0(1) - sensor_locations(:,1)).^2 + (x0(2) - sensor_locations(:,2)).^2 + (x0(3) - sensor_locations(:,3)).^2).^0.5;
+            % d_distances = (x0 - sensor_locations) ./ distances;
+            
+            % Convert row to column vectors
+            sensor_locations = sensor_locations';
+            x0 = x0';
+            % Example of how vectors should look like
+            % sensor_locations = [0,0,0; 0,1,0; 1,0,0; -1,-1,0]';
+            % x0 = [1, 1, 0];
+
+            % Create x variable to differentiate
+            x = symmatrix('x', size(x0));
+            % Create location to put output vector of symbols
+            f = zeros([1 size(sensor_locations, 2)]);
+            Df = zeros([size(x0,2) size(sensor_locations, 2)]);
+            % Create symbolic sensor location to let us differentiate once and not for every sensor
+            sens_loc = symmatrix('sens_loc', size(x0));
+            % Symbolic function to differentiate
+            d = ((x-sens_loc) * (x-sens_loc).').^0.5;
+            % Create symbolic functions that can get parameters (matrix symbolic functions can't use parameters)
+            x0_c = num2cell(x0);
+            d_s(symmatrix2sym(sens_loc), symmatrix2sym(x)) = symmatrix2sym(d);
+            Dd = diff(d,x);
+            Dd_s(symmatrix2sym(sens_loc), symmatrix2sym(x)) = symmatrix2sym(Dd);
+            % Calculate function and derivative for each sensor
+            for i = 1:length(f)
+                sens_loc_c = num2cell(sensor_locations(:,i));
+                f(i) = d_s(sens_loc_c{:}, x0_c{:});
+                Df(:,i) = Dd_s(sens_loc_c{:}, x0_c{:});
+            end
+            % Convert vector of symbols to numbers
+            dist = double(f)';
+            Ddist = double(Df)';
         end
 
-        function d_distances = dh(obj, sensor_locations, x_0)
-            d_distances = x_0 ./ h(obj, sensor_locations, x_0);
-        end
-
-        function point = estimate_point_by_distances(obj, distances, sensor_locations, x_0)
-            point = x_0
+        function point = estimate_point_by_distances(obj, distances, sensor_locations, x0)
+            point = x0
         end
 
         function estimated_path = estimate_path_by_distance(obj)
