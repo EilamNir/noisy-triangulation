@@ -10,7 +10,7 @@ classdef iterative_estimator < handle
                 initial_location_guess
             end
             obj.sensor_list = sensor_list;
-            obj.last_location = initial_location_guess
+            obj.last_location = initial_location_guess;
             % TODO: differentiate the functions in this init function and save symbolic functions for run time
         end
 
@@ -21,8 +21,7 @@ classdef iterative_estimator < handle
             
             % Convert row to column vectors
             sensor_locations = sensor_locations';
-            x0 = x0';
-            % Example of how vectors should look like
+            % Example of how vectors should look like:
             % sensor_locations = [0,0,0; 0,1,0; 1,0,0; -1,-1,0]';
             % x0 = [1, 1, 0];
 
@@ -47,12 +46,31 @@ classdef iterative_estimator < handle
                 Df(:,i) = Dd_s(sens_loc_c{:}, x0_c{:});
             end
             % Convert vector of symbols to numbers
-            dist = double(f)';
-            Ddist = double(Df)';
+            dist = double(f);
+            Ddist = double(Df);
         end
 
         function point = estimate_point_by_distances(obj, distances, sensor_locations, x0)
-            point = x0
+            current_estimate = x0;
+            y = distances;
+            % display(x0);
+            % display(y);
+            for i = 1:2
+                [h_x0, H] = obj.get_distances(sensor_locations, current_estimate);
+                % display(h_x0);
+                % display(H);
+                % display(size(H));
+                % display(y - h_x0');
+                z = inv(H'*H)*H';
+                % display(z);
+                a = H'*current_estimate';
+                % display(a);
+                q = inv(H'*H)*H';
+                % display(q);
+                current_estimate = ((inv(H'*H)*H')'*(y - h_x0' + H'*current_estimate'))';
+                % display(current_estimate);
+            end
+            point = current_estimate;
         end
 
         function estimated_path = estimate_path_by_distance(obj)
@@ -60,15 +78,18 @@ classdef iterative_estimator < handle
                 obj
             end
 
-            all_distances = zeros([length(sensor_list) length(sensor_list(1).noisy_distances)]);
-            sensor_locations = zeros([length(sensor_list) length(sensor_list(1).sensor_position)]);
-            for i = 1:length(sensor_list)
-                all_distances(i,:) = sensor_list(i).noisy_distances;
-                sensor_locations(i,:) = sensor_list(i).sensor_position;
+            all_distances = zeros([size(obj.sensor_list, 2) size(obj.sensor_list(1).noisy_distances, 1)]);
+            sensor_locations = zeros([size(obj.sensor_list, 2) size(obj.sensor_list(1).sensor_position, 2)]);
+            estimated_path = zeros([size(obj.sensor_list(1).noisy_distances, 1) size(obj.sensor_list(1).sensor_position, 2)]);
+            for i = 1:size(obj.sensor_list, 2)
+                all_distances(i,:) = obj.sensor_list(i).noisy_distances;
+                sensor_locations(i,:) = obj.sensor_list(i).sensor_position;
             end
-            for i = 1:length(all_distances)
-                current_point = obj.estimate_point_by_distances(all_distances(:,i), sensor_locations, obj.last_location)
-                obj.last_location = current_point
+            % estimated_path = obj.estimate_point_by_distances(all_distances(:,1), sensor_locations, obj.last_location);
+            for i = 1:size(all_distances, 2)
+                current_point = obj.estimate_point_by_distances(all_distances(:,i), sensor_locations, obj.last_location);
+                obj.last_location = current_point;
+                estimated_path(i,:) = current_point;
             end
         end
     end

@@ -93,3 +93,27 @@ for i = 1:size(sensor_list, 2)
     % plot3(perfect_positions(:,1), perfect_positions(:,2), perfect_positions(:,3), '^g');
 end
 
+%%
+% test iterative estimator
+import estimation.iterative_estimator;
+import simulation.noisy_sensor;
+
+sensor_distance1_pos = [0,0,1];
+sensor_distance1 = noisy_sensor(sensor_distance1_pos, "has_distance", true, "has_angle", false, "distance_noise_sigma", 0.1);
+sensor_distance2_pos = [1, 0, 0];
+sensor_distance2 = noisy_sensor(sensor_distance2_pos, "has_distance", true, "has_angle", false, "distance_noise_sigma", 0.1);
+sensor_distance3_pos = [0, 1, 0];
+sensor_distance3 = noisy_sensor(sensor_distance3_pos, "has_distance", true, "has_angle", false, "distance_noise_sigma", 0.1);
+sensor_list = [sensor_distance1, sensor_distance2, sensor_distance3];
+% sensor_list = [sensor_distance2, sensor_distance3];
+temp_path = [1.2,1,0; 0.95,0.99,0];
+for i = 1:size(sensor_list, 2)
+    sensor = sensor_list(i);
+    color = color_list(i);
+    sensor.calculate_measurements(temp_path);
+end
+
+it = iterative_estimator(sensor_list, temp_path(1,:));
+
+estimated_path = it.estimate_path_by_distance();
+display(estimated_path);
