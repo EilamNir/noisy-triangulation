@@ -121,11 +121,23 @@ display(estimated_path);
 %%
 % test estimator with working and non-working examples
 
-temp_path = [1,1,0; 0.5,0.5,0; 0,0,0,];
+temp_path = [
+    1.0,1.0,0;
+    0.9,0.9,0;
+    0.8,0.8,0;
+    0.7,0.7,0;
+    0.6,0.6,0;
+    0.5,0.5,0;
+    0.4,0.4,0;
+    0.3,0.3,0;
+    0.2,0.2,0;
+    0.1,0.1,0;
+    0,0,0];
 % working
 sensor_pos = [0,0,1; 1,0,0; 0,1,0];
 get_path_from_sensor_pos(sensor_pos, temp_path);
 % non working
+temp_path = [1,1,0];
 sensor_pos = [0,0,0; 1,0,0; 0,1,0];
 get_path_from_sensor_pos(sensor_pos, temp_path);
 
@@ -135,7 +147,7 @@ function estimated_path = get_path_from_sensor_pos(sensor_pos, path)
     import simulation.noisy_sensor;
     import estimation.iterative_estimator;
     sensor_list = noisy_sensor.empty();
-    for i = 1:size(sensor_pos, 2)
+    for i = 1:size(sensor_pos, 1)
         sensor = noisy_sensor(sensor_pos(i,:), "has_distance", true, "has_angle", false, "distance_noise_sigma", 0.1);
         sensor_list(i) = sensor;
         sensor.calculate_measurements(path);

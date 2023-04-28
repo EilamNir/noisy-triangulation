@@ -46,31 +46,18 @@ classdef iterative_estimator < handle
                 Df(:,i) = Dd_s(sens_loc_c{:}, x0_c{:});
             end
             % Convert vector of symbols to numbers
-            dist = double(f);
-            Ddist = double(Df);
+            dist = double(f)';
+            Ddist = double(Df)';
         end
 
         function point = estimate_point_by_distances(obj, distances, sensor_locations, x0)
-            current_estimate = x0;
+            current_estimate = x0';
             y = distances;
-            % display(x0);
-            % display(y);
-            for i = 1:2
-                [h_x0, H] = obj.get_distances(sensor_locations, current_estimate);
-                % display(h_x0);
-                % display(H);
-                % display(size(H));
-                % display(y - h_x0');
-                z = inv(H'*H)*H';
-                % display(z);
-                a = H'*current_estimate';
-                % display(a);
-                q = inv(H'*H)*H';
-                % display(q);
-                current_estimate = ((inv(H'*H)*H')'*(y - h_x0' + H'*current_estimate'))';
-                % display(current_estimate);
+            for i = 1:3
+                [h_x0, H] = obj.get_distances(sensor_locations, current_estimate');
+                current_estimate = inv(H'*H)*H'*(y - h_x0 + H*current_estimate);
             end
-            point = current_estimate;
+            point = current_estimate';
         end
 
         function estimated_path = estimate_path_by_distance(obj)
