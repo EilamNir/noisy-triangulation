@@ -69,9 +69,9 @@ classdef noisy_sensor < handle
                 obj.noisy_distances = obj.perfect_distances + random(obj.distance_noise_form, obj.distance_noise_mu, obj.distance_noise_sigma, size(obj.perfect_distances));
             end
             if obj.has_angle
-                obj.perfect_thetas = atan2d(vecnorm(target_true_positions(:,1:2) - obj.sensor_position(:,1:2),2,2), target_true_positions(:,3) - obj.sensor_position(:,3));
+                obj.perfect_thetas = atan2(vecnorm(target_true_positions(:,1:2) - obj.sensor_position(:,1:2),2,2), target_true_positions(:,3) - obj.sensor_position(:,3));
                 obj.noisy_thetas = obj.perfect_thetas + random(obj.theta_noise_form, obj.theta_noise_mu, obj.theta_noise_sigma, size(obj.perfect_thetas));
-                obj.perfect_phis = atan2d(target_true_positions(:,2) - obj.sensor_position(:,2), target_true_positions(:,1) - obj.sensor_position(:,1));
+                obj.perfect_phis = atan2(target_true_positions(:,2) - obj.sensor_position(:,2), target_true_positions(:,1) - obj.sensor_position(:,1));
                 obj.noisy_phis = obj.perfect_phis + random(obj.phi_noise_form, obj.phi_noise_mu, obj.phi_noise_sigma, size(obj.perfect_phis));
             end
         end

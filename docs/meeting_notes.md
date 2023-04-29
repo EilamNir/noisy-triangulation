@@ -52,13 +52,16 @@
     - $x$ is the true position vector
     - $y$ can be obtained as $y=h(x) + v$ where $h$ is some general function
     - the linear estimator is: $\hat{x} = {argmin}_x(||y-Hx||^2)$
-      - the solution is $\hat{x}_{LS} = (HH^\dagger)^{-1} H^\dagger y$
+      - the solution is $\hat{x}_{LS} = (H^\dagger H)^{-1} H^\dagger y$
     - non-linear estimations:
       - to get a non-linear estimator, we need to use a taylor series of first order of $h$, and an initial guess $x_0$ to expand the series around
         - in our case, the initial guess $x_0$ for the first point in the path will be the true point of the target, and $x_0$ for all other points will be the last estimated position.
       - to get the estimate, we will use the equation $y \approx h(x_0) + \frac{\partial h}{\partial x}\big |_{x=x_0} (x-x_0)$
       - we will define $H=\frac{\partial h}{\partial x}\big |_{x=x_0}$
       - our solution is now to use regular least-squares for minimizing $y-h(x_0)=H(x-x_0)$
+        - This gives us the LS problem of $\hat{x}=argmin_x(||(y-h(x_0)+Hx_0)-Hx||^2)$
+        - the straightforward solution to this is $\hat{x} = H^{-1}(y - h(x_0)) + x_0$
+        - if $H$ is not square, we must use the general LS solution instead, which is $\hat{x}=(H^\dagger H)^{-1}H^\dagger (y-h(x_0)+Hx_0)$
       - we can iterate over this function, each time using the last calculated $x$ as $x_0$
         - for range sensors, this should usually converge after about 3 iterations
         - for angle sensors it might take a longer time to converge
