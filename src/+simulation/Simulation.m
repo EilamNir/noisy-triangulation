@@ -96,13 +96,15 @@ estimated_path = it.estimate_path_by_distance();
 
 %%
 % display path vs estimation
+
+sleep_duration = 0.1;
 figure
 hold on 
 grid minor
 view([-37.5 30]);
-%xlim([min(path1.path(:,1))-10 max(path1.path(:,1))+10]);
-%ylim([min(path1.path(:,2))-10 max(path1.path(:,2))+10]);
-%zlim([min(path1.path(:,3))-10 max(path1.path(:,3))+10]);
+xlim([min(path1.path(:,1))-80 max(path1.path(:,1))+80]);
+ylim([min(path1.path(:,2))-80 max(path1.path(:,2))+80]);
+zlim([min(path1.path(:,3))-80 max(path1.path(:,3))+80]);
 xlabel('x'); ylabel('y'); zlabel('z');
 
 for i = 1:size(sensor_list, 2)
@@ -111,9 +113,23 @@ for i = 1:size(sensor_list, 2)
     sensor.calculate_measurements(path1.path);
     scatter3(sensor.sensor_position(:,1), sensor.sensor_position(:,2), sensor.sensor_position(:,3), 'filled', color);
 end
-plot3(path1.path(:,1), path1.path(:,2), path1.path(:,3), 'b.-');
 
-plot3(estimated_path(:,1), estimated_path(:,2), estimated_path(:,3), 'r*');
+% plot3(path1.path(:,1), path1.path(:,2), path1.path(:,3), 'b.-');
+% plot3(estimated_path(:,1), estimated_path(:,2), estimated_path(:,3), 'r*');
+
+% axis([0 3000 0 3000 0 3000])
+ax1 = plot3(path1.path(1:1,1), path1.path(1:1,2), path1.path(1:1,3), 'b.-');
+for i = 1:length(path1.path)
+    delete(ax1);
+
+    ax1 = plot3(path1.path(1:i,1), path1.path(1:i,2), path1.path(1:i,3), 'b.-');
+    
+    prediction_position = estimated_path(i,:);
+    ax3 = plot3(prediction_position(1), prediction_position(2), prediction_position(3), 'r*'); 
+    pause(sleep_duration);
+    delete(ax3);
+    ax3 = plot3(prediction_position(1), prediction_position(2), prediction_position(3), 'r.'); 
+end
 
 %%
 % test estimator with working and non-working examples
