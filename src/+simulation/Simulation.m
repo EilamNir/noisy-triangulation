@@ -129,9 +129,9 @@ for j = 1:4
     hold on 
     grid minor
     view(views(j,:));
-    xlim([min(path1.path(:,1))-80 max(path1.path(:,1))+80]);
-    ylim([min(path1.path(:,2))-80 max(path1.path(:,2))+80]);
-    zlim([min(path1.path(:,3))-80 max(path1.path(:,3))+80]);
+    xlim([min(estimated_path(:,1))-80 max(estimated_path(:,1))+80]);
+    ylim([min(estimated_path(:,2))-80 max(estimated_path(:,2))+80]);
+    zlim([min(estimated_path(:,3))-80 max(estimated_path(:,3))+80]);
     xlabel('x'); ylabel('y'); zlabel('z');
 end
 
