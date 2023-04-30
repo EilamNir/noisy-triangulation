@@ -129,9 +129,9 @@ for j = 1:4
     hold on 
     grid minor
     view(views(j,:));
-    xlim([min(estimated_path(:,1))-80 max(estimated_path(:,1))+80]);
-    ylim([min(estimated_path(:,2))-80 max(estimated_path(:,2))+80]);
-    zlim([min(estimated_path(:,3))-80 max(estimated_path(:,3))+80]);
+    xlim([min(estimated_path(:,1))-100 max(estimated_path(:,1))+100]);
+    ylim([min(estimated_path(:,2))-100 max(estimated_path(:,2))+100]);
+    zlim([min(estimated_path(:,3))-100 max(estimated_path(:,3))+100]);
     xlabel('x'); ylabel('y'); zlabel('z');
 end
 
@@ -148,6 +148,13 @@ end
 % axis([0 3000 0 3000 0 3000])
 for i = 1:size(views,1)
     ax1(j) = plot3(path1.path(1:1,1), path1.path(1:1,2), path1.path(1:1,3), 'b.-');
+    [X,Y,Z] = sphere;
+    ax4(j) = surf(X*sensor_distance1.noisy_distances(1)+sensor_distance1_pos(1),Y*sensor_distance1.noisy_distances(1)+sensor_distance1_pos(2),Z*sensor_distance1.noisy_distances(1)+sensor_distance1_pos(3),...
+        'EdgeColor','none','FaceAlpha',0.2,'FaceColor','red');
+    ax5(j) = surf(X*sensor_distance2.noisy_distances(1)+sensor_distance2_pos(1),Y*sensor_distance2.noisy_distances(1)+sensor_distance2_pos(2),Z*sensor_distance2.noisy_distances(1)+sensor_distance2_pos(3),...
+        'EdgeColor','none','FaceAlpha',0.2,'FaceColor','red');
+    ax6(j) = surf(X*sensor_distance3.noisy_distances(1)+sensor_distance3_pos(1),Y*sensor_distance3.noisy_distances(1)+sensor_distance3_pos(2),Z*sensor_distance3.noisy_distances(1)+sensor_distance3_pos(3),...
+        'EdgeColor','none','FaceAlpha',0.2,'FaceColor','red');
 end
 for i = 1:length(path1.path)
     % frameIndex = i * 2 - 1;
@@ -172,6 +179,17 @@ for i = 1:length(path1.path)
         subplot(2,2,j);
         delete(ax3(j));
         ax3(j) = plot3(prediction_position(1), prediction_position(2), prediction_position(3), 'r.'); 
+        [X,Y,Z] = sphere;
+        delete(ax4(j));
+        ax4(j) = surf(X*sensor_distance1.noisy_distances(i)+sensor_distance1_pos(1),Y*sensor_distance1.noisy_distances(i)+sensor_distance1_pos(2),Z*sensor_distance1.noisy_distances(i)+sensor_distance1_pos(3),...
+            'EdgeColor','none','FaceAlpha',0.2,'FaceColor','red');
+        delete(ax5(j));
+        ax5(j) = surf(X*sensor_distance2.noisy_distances(i)+sensor_distance2_pos(1),Y*sensor_distance2.noisy_distances(i)+sensor_distance2_pos(2),Z*sensor_distance2.noisy_distances(i)+sensor_distance2_pos(3),...
+            'EdgeColor','none','FaceAlpha',0.2,'FaceColor','red');
+        delete(ax6(j));
+        ax6(j) = surf(X*sensor_distance3.noisy_distances(i)+sensor_distance3_pos(1),Y*sensor_distance3.noisy_distances(i)+sensor_distance3_pos(2),Z*sensor_distance3.noisy_distances(i)+sensor_distance3_pos(3),...
+            'EdgeColor','none','FaceAlpha',0.2,'FaceColor','red');
+        % axis equal;
     end
     % drawnow;
     % thisFrame = getframe(hFigure);
@@ -179,7 +197,7 @@ for i = 1:length(path1.path)
     % myMovie(frameIndex) = thisFrame;
 end
 
-
+%%
 message = sprintf('Done creating movie\nDo you want to play it?');
 button = questdlg(message, 'Continue?', 'Yes', 'No', 'Yes');
 drawnow;	% Refresh screen to get rid of dialog box remnants.
