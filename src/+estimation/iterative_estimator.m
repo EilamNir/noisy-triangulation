@@ -27,8 +27,8 @@ classdef iterative_estimator < handle
             d_s(symmatrix2sym(sens_loc), symmatrix2sym(x)) = symmatrix2sym(d);
             Dd = diff(d,x);
             Dd_s(symmatrix2sym(sens_loc), symmatrix2sym(x)) = symmatrix2sym(Dd);
-            obj.d_s = d_s;
-            obj.Dd_s = Dd_s;
+            obj.d_s = matlabFunction(d_s);
+            obj.Dd_s = matlabFunction(Dd_s);
         end
 
         function [dist, Ddist] = get_distances(obj, sensor_locations, x0)
@@ -55,8 +55,8 @@ classdef iterative_estimator < handle
                 Df(:,i) = obj.Dd_s(sens_loc_c{:}, x0_c{:});
             end
             % Convert vector of symbols to numbers
-            dist = double(f)';
-            Ddist = double(Df)';
+            dist = f';
+            Ddist = Df';
         end
 
         function point = estimate_point_by_distances(obj, distances, sensor_locations, x0)
