@@ -14,21 +14,23 @@ classdef iterative_estimator < handle
             obj.sensor_list = sensor_list;
             obj.last_location = initial_location_guess;
             
-            % Create x variable to differentiate
-            x = symmatrix('x', size(initial_location_guess));
-            
-            
-            % Create symbolic sensor location to let us differentiate once and not for every sensor
-            sens_loc = symmatrix('sens_loc', size(initial_location_guess));
-            % Symbolic function to differentiate
-            d = ((x-sens_loc) * (x-sens_loc).').^0.5;
-            % Create symbolic functions that can get parameters (matrix symbolic functions can't use parameters)
-            
-            d_s(symmatrix2sym(sens_loc), symmatrix2sym(x)) = symmatrix2sym(d);
-            Dd = diff(d,x);
-            Dd_s(symmatrix2sym(sens_loc), symmatrix2sym(x)) = symmatrix2sym(Dd);
-            obj.d_s = matlabFunction(d_s);
-            obj.Dd_s = matlabFunction(Dd_s);
+%             % Create x variable to differentiate
+%             x = symmatrix('x', size(initial_location_guess));
+%             
+%             
+%             % Create symbolic sensor location to let us differentiate once and not for every sensor
+%             sens_loc = symmatrix('sens_loc', size(initial_location_guess));
+%             % Symbolic function to differentiate
+%             d = ((x-sens_loc) * (x-sens_loc).').^0.5;
+%             % Create symbolic functions that can get parameters (matrix symbolic functions can't use parameters)
+%             
+%             d_s(symmatrix2sym(sens_loc), symmatrix2sym(x)) = symmatrix2sym(d);
+%             Dd = diff(d,x);
+%             Dd_s(symmatrix2sym(sens_loc), symmatrix2sym(x)) = symmatrix2sym(Dd);
+%             obj.d_s = matlabFunction(d_s);
+%             obj.Dd_s = matlabFunction(Dd_s);
+              obj.d_s = @(sens_loc, x) vecnorm(x-sens_loc,2,2);
+              obj.Dd_s = @(sens_loc, x) (x-sens_loc)./vecnorm(x-sens_loc,2,2);
         end
 
         function [dist, Ddist] = get_distances(obj, sensor_locations, x0)
@@ -37,26 +39,18 @@ classdef iterative_estimator < handle
             % d_distances = (x0 - sensor_locations) ./ distances;
 
             % Convert row to column vectors
-            sensor_locations = sensor_locations';
+%             sensor_locations = sensor_locations';
             % Example of how vectors should look like:
             % sensor_locations = [0,0,0; 0,1,0; 1,0,0; -1,-1,0]';
             % x0 = [1, 1, 0];
-
-            x0_c = num2cell(x0);
-
-            % Create location to put output vector of symbols
-            f = zeros([1 size(sensor_locations, 2)]);
-            Df = zeros([size(x0,2) size(sensor_locations, 2)]);
             
             % Calculate function and derivative for each sensor
-            for i = 1:length(f)
-                sens_loc_c = num2cell(sensor_locations(:,i));
-                f(i) = obj.d_s(sens_loc_c{:}, x0_c{:});
-                Df(:,i) = obj.Dd_s(sens_loc_c{:}, x0_c{:});
-            end
+            dist = obj.d_s(sensor_locations, x0);
+            Ddist = obj.Dd_s(sensor_locations, x0);
+            
             % Convert vector of symbols to numbers
-            dist = f';
-            Ddist = Df';
+%             dist = f';
+%             Ddist = Df';
         end
 
         function point = estimate_point_by_distances(obj, distances, sensor_locations, x0)
