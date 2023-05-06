@@ -46,6 +46,27 @@ for i = 1:size(sensor_list, 2)
     sensor.calculate_measurements(path1.path);
 end
 
+
+% %% monte carlo
+% SaveRuns = [];
+% for j = 1:100
+%     for i = 1:size(sensor_list, 2)
+%         sensor = sensor_list(i);
+%         color = color_list(i);
+%         sensor.calculate_measurements(path1.path);
+%     end
+%     
+%     import estimation.iterative_estimator;
+%     
+%     it = iterative_estimator(sensor_list, path1.path(1,:));
+%     
+%     estimated_path = it.estimate_path_by_distance();
+%     
+%     SaveRuns = cat(3,SaveRuns,estimated_path-path1.path);
+% end
+% 
+% var = sum(SaveRuns.^2,3)/size(SaveRuns,3); 
+
 %% test iterative estimator
 import estimation.iterative_estimator;
 
