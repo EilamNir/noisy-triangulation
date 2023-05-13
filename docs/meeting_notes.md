@@ -66,11 +66,54 @@
         - for range sensors, this should usually converge after about 3 iterations
         - for angle sensors it might take a longer time to converge
           - we need to remember to keep the angles between $Az \in [0, 2 \pi], Elevation \in [0, \pi]$
-      - we need to calculate $cov(\hat{\Delta x}) = cov(\hat{x}-x_0)=cov((HH^\dagger)^{-1} H^\dagger \Delta y)=Jcov(\Delta y)J^\dagger$
-        - we defined $J = (HH^\dagger)^{-1} H^\dagger$ as $J$ is constant and can be calculated ahead of time once
+      - we need to calculate $cov(\hat{\Delta x}) = cov(\hat{x}-x_0)=cov((H^\dagger H)^{-1} H^\dagger \Delta y)=Jcov(\Delta y)J^\dagger$
+        - we defined $J = (H^\dagger H)^{-1} H^\dagger$ as $J$ is constant and can be calculated ahead of time once
 - CRML project definition report
   - take tasks from initial mail and fill in appropriate dates for tasks gantt
     - add filtering as a task
   - main reference will be the book from the first mail
     - other references will be added later when we decide on what to continue with
   - no need to spend too much time on this report
+
+## 2023-05-02 meeting notes
+
+- Change distance and time of path to be 100km straight, 90 km turn, and another 100 km straight
+- Add cov calculation to estimate the error
+  - Use the last $\hat{x}$ estimated, and the true $x_0$
+  - Only run it at the end, and only for the true path
+  - If we mix azimuth and distances, the calculation won't work because of mixing of units, and we will need to weight it with a matrix with a diagonal of $\frac{1}{\sigma^2}$
+    - Don't do it right now, stick with distances for now
+  - To get the error, we can take $sqrt(trace(\text{cov matrix}))$
+    - We can split it to error in xy plane and error in z, as the error should be very different between those
+- Compare the error to Monte Carlo
+  - run 100-200 simulations
+  - take the square root of the distance between the points on the true path to the estimated path
+  - averaging all 100 runs should give us something that is close to the cov we calculated
+    - do this for each coordinate separately
+      - We will get an average error for each axis, compare to the cov we calculated
+      - use pythagoras to get the xy error and compare to the trace of the xy of the cov
+      - plot a graph of the real errors (from Monte Carlo) and the expected errors (from cov calculation) for each point in time
+      - the cov should stay the same for all simulations, we only need to calculate it once
+    - The error we get will depend on sensor locations
+- Test set:
+  - The path should stay constant for all simulations, and be in hight of 1000 m
+  - simulations:
+    - put 3 sensors as they are now (one before the path, one after the path, one in some other location)
+    - Put all 3 sensors around the same point $(-1000, -4000, 0)$
+    - put the 3 sensors as they are now, but in hight of 5000 m
+    - use more than 3 sensors
+- We should only change the geometry (path/sensors) or the noise, as those are the only things affecting the cov
+- show on a graph the errors (MC and COV) for the different paths
+- If all the sensors are the same, we get:
+  - $cov = JJ^\dagger \cdot cov(\Delta y) = (H^\dagger H)^{-1} \cdot cov(\Delta y)$
+  - therefore:
+  - $cov =[(H^\dagger H)^{-1} H^\dagger] [H (H^\dagger H)^{-1}] \cdot cov(\Delta y) = (H^\dagger H)^{-1}\sigma_r^2$
+  - where $(H^\dagger H)^{-1}$ depends on the geometry, and $\sigma_r^2$ depends on noise
+- We can also estimate the error:
+  - $\sqrt{tr((H^\dagger H)^{-1})} = GDOP$
+    - GDOP stands for Geometric Dilution Of Precision
+  - in GPS there is a rule of thumb: $DOP>6$ is bad, $DOP<6$ is good
+  - We can also calculate VDOP and HDOP (vertical/horizontal DOP) by taking only the hight or xy in the matrix $(H^\dagger H)^{-1}$
+- This is a tool that allows us to estimate performance without doing any experiments
+- Adding a sensor makes it so we don't need to do more than a single iteration to converge
+- We shouldn't use $inv$ in Matlab, and instead do something like $(H'H)\char`\\H'$ or $(eye/(H'H))H'$
