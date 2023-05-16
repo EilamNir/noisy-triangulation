@@ -5,10 +5,11 @@ TargetPos = [0,0,1000];
 TargetSpeed_xy = 50;
 TargetSpeed_z = 10;
 TargetRotSpeed = 3;
-TimeRes = 2;
+TimeRes = 0.5;
 SimulationDuration = 150;
 TargetTheta = 90;
 TargetPhi = 45;
+sensor_dist_sigma = 15;
 
 % make the results reproducible by seeding the random number generator
 rng(42);
@@ -29,7 +30,7 @@ import simulation.noisy_sensor
 %% create sensors
 sensor_list = [];
 for i = 1:size(SensorPos,1)
-    dataset = noisy_sensor(SensorPos(i,:), "has_distance", true, "has_angle", false, "distance_noise_sigma", 15);
+    dataset = noisy_sensor(SensorPos(i,:), "has_distance", true, "has_angle", false, "distance_noise_sigma", sensor_dist_sigma);
     assignin('base',['sensor_distance' num2str(i)], dataset);
     sensor_list = cat(2,sensor_list,eval(['sensor_distance' num2str(i)]));
 %     dataset = noisy_sensor(sensor_angle1_pos, "has_distance", false, "has_angle", true, "theta_noise_sigma", 5, "theta_noise_sigma", 5);
@@ -73,24 +74,34 @@ it = iterative_estimator(sensor_list, path1.path(1,:));
 estimated_path = it.estimate_path_by_distance();
 
 %% get cov error
-path_cov_err = it.get_cov_err(path1.path);
+H_dag_H_inv = it.get_cov_err(path1.path);
+path_cov_err = H_dag_H_inv * sensor_dist_sigma^2;
+% path_cov_err = it.get_cov_err(estimated_path) * sensor_dist_sigma^2;
+
+GDOP = sqrt(sum(H_dag_H_inv, 2));
+HDOP = sqrt(sum(H_dag_H_inv(:, 1:2), 2));
+VDOP = sqrt(H_dag_H_inv(:, 3));
 figure
 hold on
 grid minor
 xlabel('time');
 ylabel('error');
 legend('Location','east');
-plot(path1.time, path_cov_err(:,1) / 3, '--','DisplayName', 'x cov / 3', "color", "r")
+plot(path1.time, GDOP, 'DisplayName', 'GDOP')
+plot(path1.time, VDOP, 'DisplayName', 'VDOP')
+plot(path1.time, HDOP, 'DisplayName', 'HDOP')
+
+figure
+hold on
+grid minor
+xlabel('time');
+ylabel('error');
+legend('Location','east');
+plot(path1.time, path_cov_err(:,1), '--','DisplayName', 'x cov', "color", "r")
 plot(path1.time, var(:,1), 'DisplayName', 'x MC', "color", "#A2142F")
-plot(path1.time, path_cov_err(:,2) / 3, '--','DisplayName', 'y cov / 3', "color", "g")
+plot(path1.time, path_cov_err(:,2), '--','DisplayName', 'y cov', "color", "g")
 plot(path1.time, var(:,2), 'DisplayName', 'y MC', "color", "#77AC30")
-figure
-hold on
-grid minor
-xlabel('time');
-ylabel('error');
-legend('Location','east');
-plot(path1.time, path_cov_err(:,3) / 3, '--','DisplayName', 'z cov / 3', "color", "b")
+plot(path1.time, path_cov_err(:,3), '--','DisplayName', 'z cov', "color", "b")
 plot(path1.time, var(:,3), 'DisplayName', 'z MC', "color", "#0072BD")
 
 %% display path vs estimation
@@ -123,7 +134,7 @@ for i = 1:length(path1.path)
     
     prediction_position = estimated_path(i,:);
     ax3 = plot3(prediction_position(1), prediction_position(2), prediction_position(3), 'r*'); 
-    pause(sleep_duration);
+    % pause(sleep_duration);
     delete(ax3);
     ax3 = plot3(prediction_position(1), prediction_position(2), prediction_position(3), 'r.'); 
 end

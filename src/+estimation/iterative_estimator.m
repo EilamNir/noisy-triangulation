@@ -143,13 +143,10 @@ classdef iterative_estimator < handle
             % path_cov_err is the expected [x_err, y_err, z_err] for each point on the path
             path_cov_err = zeros(size(true_path));
 
-            sensor_sigmas = obj.sensor_sigmas;
-            sigma_squared = sensor_sigmas' * sensor_sigmas;
-
             for i = 1:size(true_path, 1)
                 current_point = true_path(i,:);
                 [h_x0, H] = obj.get_distances(obj.sensor_locations, current_point);
-                cov_vec = diag(inv(H'*H) * sigma_squared);
+                cov_vec = diag(inv(H'*H));
                 path_cov_err(i,:) = cov_vec';
             end
         end
