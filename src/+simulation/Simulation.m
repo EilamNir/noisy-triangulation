@@ -5,7 +5,7 @@ TargetPos = [0,0,1000];
 TargetSpeed_xy = 50;
 TargetSpeed_z = 10;
 TargetRotSpeed = 3;
-TimeRes = 0.5;
+TimeRes = 2;
 SimulationDuration = 150;
 TargetTheta = 90;
 TargetPhi = 45;
@@ -42,7 +42,6 @@ color_list = ['r', 'g', 'y', 'k'];
 
 for i = 1:size(sensor_list, 2)
     sensor = sensor_list(i);
-    color = color_list(i);
     sensor.calculate_measurements(path1.path);
 end
 
@@ -52,7 +51,6 @@ end
 % for j = 1:100
 %     for i = 1:size(sensor_list, 2)
 %         sensor = sensor_list(i);
-%         color = color_list(i);
 %         sensor.calculate_measurements(path1.path);
 %     end
 %     
@@ -73,6 +71,16 @@ import estimation.iterative_estimator;
 it = iterative_estimator(sensor_list, path1.path(1,:));
 
 estimated_path = it.estimate_path_by_distance();
+
+%% get cov error
+path_cov_err = it.get_cov_err(path1.path);
+figure
+hold on
+grid minor
+legend
+plot(path1.time, path_cov_err(:,1), 'DisplayName', 'x cov error')
+plot(path1.time, path_cov_err(:,2), 'DisplayName', 'y cov error')
+plot(path1.time, path_cov_err(:,3), 'DisplayName', 'z cov error')
 
 %% display path vs estimation
 

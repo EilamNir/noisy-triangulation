@@ -7,6 +7,7 @@ classdef generate_path < handle
         acceleration
         TimeRes
         path
+        time
     end
     methods
         function obj = generate_path(options)
@@ -33,6 +34,7 @@ classdef generate_path < handle
             obj.acceleration = 0;
             obj.TimeRes = options.TimeRes;
             obj.path = obj.position;
+            obj.time = [0];
         end
 
         function add_straight_interval(obj, interval_duration, options)
@@ -98,6 +100,7 @@ classdef generate_path < handle
                 obj.position(1:2) = obj.position(1:2) + (obj.TimeRes * obj.speed_xy .* TransposeMatrix2d(obj.phi))';
                 obj.position(3) = obj.position(3) + (obj.TimeRes * obj.speed_z);
                 obj.path(end+1,:) = obj.position;
+                obj.time(end+1) = obj.time(end) + obj.TimeRes;
 
                 obj.phi = mod(obj.phi - obj.TimeRes * phi_rotation_speed, 2*pi);
             end
