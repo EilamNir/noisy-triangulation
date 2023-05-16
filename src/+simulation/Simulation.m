@@ -46,24 +46,24 @@ for i = 1:size(sensor_list, 2)
 end
 
 
-% %% monte carlo
-% SaveRuns = [];
-% for j = 1:100
-%     for i = 1:size(sensor_list, 2)
-%         sensor = sensor_list(i);
-%         sensor.calculate_measurements(path1.path);
-%     end
-%     
-%     import estimation.iterative_estimator;
-%     
-%     it = iterative_estimator(sensor_list, path1.path(1,:));
-%     
-%     estimated_path = it.estimate_path_by_distance();
-%     
-%     SaveRuns = cat(3,SaveRuns,estimated_path-path1.path);
-% end
-% 
-% var = sum(SaveRuns.^2,3)/size(SaveRuns,3); 
+%% monte carlo
+SaveRuns = [];
+for j = 1:100
+    for i = 1:size(sensor_list, 2)
+        sensor = sensor_list(i);
+        sensor.calculate_measurements(path1.path);
+    end
+    
+    import estimation.iterative_estimator;
+    
+    it = iterative_estimator(sensor_list, path1.path(1,:));
+    
+    estimated_path = it.estimate_path_by_distance();
+    
+    SaveRuns = cat(3,SaveRuns,estimated_path-path1.path);
+end
+
+var = sum(SaveRuns.^2,3)/size(SaveRuns,3); 
 
 %% test iterative estimator
 import estimation.iterative_estimator;
@@ -77,10 +77,21 @@ path_cov_err = it.get_cov_err(path1.path);
 figure
 hold on
 grid minor
-legend
-plot(path1.time, path_cov_err(:,1), 'DisplayName', 'x cov error')
-plot(path1.time, path_cov_err(:,2), 'DisplayName', 'y cov error')
-plot(path1.time, path_cov_err(:,3), 'DisplayName', 'z cov error')
+xlabel('time');
+ylabel('error');
+legend('Location','east');
+plot(path1.time, path_cov_err(:,1) / 3, '--','DisplayName', 'x cov / 3', "color", "r")
+plot(path1.time, var(:,1), 'DisplayName', 'x MC', "color", "#A2142F")
+plot(path1.time, path_cov_err(:,2) / 3, '--','DisplayName', 'y cov / 3', "color", "g")
+plot(path1.time, var(:,2), 'DisplayName', 'y MC', "color", "#77AC30")
+figure
+hold on
+grid minor
+xlabel('time');
+ylabel('error');
+legend('Location','east');
+plot(path1.time, path_cov_err(:,3) / 3, '--','DisplayName', 'z cov / 3', "color", "b")
+plot(path1.time, var(:,3), 'DisplayName', 'z MC', "color", "#0072BD")
 
 %% display path vs estimation
 
