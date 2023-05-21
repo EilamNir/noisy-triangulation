@@ -6,7 +6,7 @@ TargetPos = [0,0,1000];
 TargetSpeed_xy = 50;
 TargetSpeed_z = 10;
 TargetRotSpeed = 3;
-TimeRes = 2;
+TimeRes = 0.5;
 
 % make the results reproducible by seeding the random number generator
 rng(42);
@@ -23,18 +23,19 @@ if should_generate_data
 
     % create estimation and save to file
     import simulation.create_simulations.save_simulation_MC
-    % [true_path, path_time, estimated_path, MC_MSE, cov_mat, cov_MSE, SensorPos] = save_simulation_MC(SensorPos, path1.path, path1.time, "../data/MC_original.mat");
-    % save_simulation_MC([-1000,-4000,0; -2000,-6000,0; 0,-5000,0], path1.path, path1.time, "../data/MC_bunched_sensors.mat");
-    % save_simulation_MC([-5000,0,5000; 400, -7400, 5000; 800, 800, 5000], path1.path, path1.time, "../data/MC_high_sensors.mat");
-    % save_simulation_MC([-5000,0,0; 400, -7400, 0; 800, 800, 0; 8000, 1000, 0], path1.path, path1.time, "../data/MC_4_sensors.mat");
+    % [true_path, path_time, estimated_path, MC_MSE, cov_mat, cov_MSE, SensorPos] = save_simulation_MC(SensorPos, path1.path, path1.time, 10000, "../data/MC_original.mat");
+    save_simulation_MC(SensorPos, path1.path, path1.time, 10000, "../data/MC_original_10000.mat");
+    save_simulation_MC([-1000,-4000,0; -2000,-6000,0; 0,-5000,0], path1.path, path1.time, 10000, "../data/MC_bunched_sensors_10000.mat");
+    save_simulation_MC([-5000,0,5000; 400, -7400, 5000; 800, 800, 5000], path1.path, path1.time, 10000, "../data/MC_high_sensors_10000.mat");
+    save_simulation_MC([-5000,0,0; 400, -7400, 0; 800, 800, 0; 8000, 1000, 0], path1.path, path1.time, 10000, "../data/MC_4_sensors_10000.mat");
 else
     % load estimation from file
     import simulation.create_simulations.load_simulation_MC
     filenames = [ ...
-        "../data/MC_original.mat", ...
-        "../data/MC_bunched_sensors.mat", ...
-        "../data/MC_high_sensors.mat", ...
-        "../data/MC_4_sensors.mat"...
+        "../data/MC_original_10000.mat", ...
+        "../data/MC_bunched_sensors_10000.mat", ...
+        "../data/MC_high_sensors_10000.mat", ...
+        "../data/MC_4_sensors_10000.mat"...
         ];
     for file_index = 1:size(filenames, 2)
         filename = filenames(file_index);

@@ -1,10 +1,9 @@
 classdef create_simulations
     methods (Static)
-        function [true_path, path_time, estimated_path, MC_MSE, cov_mat, cov_MSE, SensorPos] = save_simulation_MC(SensorPos_in, path, path_time_in, file_path)
+        function [true_path, path_time, estimated_path, MC_MSE, cov_mat, cov_MSE, SensorPos] = save_simulation_MC(SensorPos_in, path, path_time_in, MC_iterations, file_path)
             true_path = path;
             SensorPos = SensorPos_in;
             path_time = path_time_in;
-            MC_iterations = 100;
             sensor_dist_sigma = 15;
             
             % create sensors
