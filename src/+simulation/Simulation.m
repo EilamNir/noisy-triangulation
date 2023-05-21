@@ -7,11 +7,13 @@ TargetSpeed_xy = 50;
 TargetSpeed_z = 10;
 TargetRotSpeed = 3;
 TimeRes = 0.5;
+should_generate_data = false;
+animation = false;
+%%
 
 % make the results reproducible by seeding the random number generator
 rng(42);
 
-should_generate_data = false;
 
 if should_generate_data
     % generate a path
@@ -31,14 +33,13 @@ if should_generate_data
 else
     % load estimation from file
     import simulation.create_simulations.load_simulation_MC
-    filenames = [ ...
-        "../data/MC_original_10000.mat", ...
-        "../data/MC_bunched_sensors_10000.mat", ...
-        "../data/MC_high_sensors_10000.mat", ...
-        "../data/MC_4_sensors_10000.mat"...
-        ];
+    [file,path] = uigetfile('../data/*.mat',...
+                            'Select One or More Files', ...
+                            'MultiSelect', 'on');
+    filenames = fullfile(path,file);
+                     
     for file_index = 1:size(filenames, 2)
-        filename = filenames(file_index);
+        filename = filenames{file_index};
         [true_path, path_time, estimated_path, MC_MSE, cov_mat, cov_MSE, SensorPos] = load_simulation_MC(filename);
 
         GDOP = sqrt(sum(cov_mat, 2));
@@ -88,17 +89,23 @@ else
         end
 
 
-        ax1 = plot3(true_path(1:1,1), true_path(1:1,2), true_path(1:1,3), 'b.-');
-        for i = 1:length(true_path)
-            delete(ax1);
+        
+        if animation
+            ax1 = plot3(true_path(1:1,1), true_path(1:1,2), true_path(1:1,3), 'b.-');
+            for i = 1:length(true_path)
+                delete(ax1);
 
-            ax1 = plot3(true_path(1:i,1), true_path(1:i,2), true_path(1:i,3), 'b.-');
-            
-            prediction_position = estimated_path(i,:);
-            ax3 = plot3(prediction_position(1), prediction_position(2), prediction_position(3), 'r*'); 
-            % pause(sleep_duration);
-            delete(ax3);
-            ax3 = plot3(prediction_position(1), prediction_position(2), prediction_position(3), 'r.'); 
+                ax1 = plot3(true_path(1:i,1), true_path(1:i,2), true_path(1:i,3), 'b.-');
+
+                prediction_position = estimated_path(i,:);
+                ax3 = plot3(prediction_position(1), prediction_position(2), prediction_position(3), 'r*'); 
+                pause(sleep_duration);
+                delete(ax3);
+                ax3 = plot3(prediction_position(1), prediction_position(2), prediction_position(3), 'r.'); 
+            end
+        else
+            plot3(true_path(:,1), true_path(:,2), true_path(:,3), 'b.-');
+            plot3(estimated_path(:,1), estimated_path(:,2), estimated_path(:,3), 'r.');
         end
     end
 end
