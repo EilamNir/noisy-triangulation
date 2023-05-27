@@ -4,6 +4,9 @@ classdef iterative_estimator < handle
         last_location
         d_s
         Dd_s
+        all_distances
+        sensor_locations
+        sensor_sigmas
     end
     methods
         function obj = iterative_estimator(sensor_list, initial_location_guess)
@@ -13,50 +16,38 @@ classdef iterative_estimator < handle
             end
             obj.sensor_list = sensor_list;
             obj.last_location = initial_location_guess;
-            
-            % Create x variable to differentiate
-            x = symmatrix('x', size(initial_location_guess));
-            
-            
-            % Create symbolic sensor location to let us differentiate once and not for every sensor
-            sens_loc = symmatrix('sens_loc', size(initial_location_guess));
-            % Symbolic function to differentiate
-            d = ((x-sens_loc) * (x-sens_loc).').^0.5;
-            % Create symbolic functions that can get parameters (matrix symbolic functions can't use parameters)
-            
-            d_s(symmatrix2sym(sens_loc), symmatrix2sym(x)) = symmatrix2sym(d);
-            Dd = diff(d,x);
-            Dd_s(symmatrix2sym(sens_loc), symmatrix2sym(x)) = symmatrix2sym(Dd);
-            obj.d_s = matlabFunction(d_s);
-            obj.Dd_s = matlabFunction(Dd_s);
+            obj.set_dist_functions();
+            obj.init_sensors()
+        end
+
+        function set_dist_functions(obj)
+            % % Symbolic functions:
+            % % Create x variable to differentiate
+            % x = symmatrix('x', size(initial_location_guess));
+            % % Create symbolic sensor location to let us differentiate once and not for every sensor
+            % sens_loc = symmatrix('sens_loc', size(initial_location_guess));
+            % % Symbolic function to differentiate
+            % d = ((x-sens_loc) * (x-sens_loc).').^0.5;
+            % % Create symbolic functions that can get parameters (matrix symbolic functions can't use parameters)
+            % d_s(symmatrix2sym(sens_loc), symmatrix2sym(x)) = symmatrix2sym(d);
+            % Dd = diff(d,x);
+            % Dd_s(symmatrix2sym(sens_loc), symmatrix2sym(x)) = symmatrix2sym(Dd);
+            % obj.d_s = matlabFunction(d_s);
+            % obj.Dd_s = matlabFunction(Dd_s);
+
+            % Functions by hand:
+            obj.d_s = @(sens_loc, x) vecnorm(x-sens_loc,2,2);
+            obj.Dd_s = @(sens_loc, x) (x-sens_loc)./vecnorm(x-sens_loc,2,2);
         end
 
         function [dist, Ddist] = get_distances(obj, sensor_locations, x0)
-            % when calculating by hand:
-            % distances = ((x0(1) - sensor_locations(:,1)).^2 + (x0(2) - sensor_locations(:,2)).^2 + (x0(3) - sensor_locations(:,3)).^2).^0.5;
-            % d_distances = (x0 - sensor_locations) ./ distances;
+            % If using the symbolic function:
+            % dist = obj.d_s(sensor_locations(1,:), sensor_locations(2,:), sensor_locations(3,:), x0(1), x0(2), x0(3))';
+            % Ddist = obj.Dd_s(sensor_locations(1,:), sensor_locations(2,:), sensor_locations(3,:), x0(1), x0(2), x0(3))';
 
-            % Convert row to column vectors
-            sensor_locations = sensor_locations';
-            % Example of how vectors should look like:
-            % sensor_locations = [0,0,0; 0,1,0; 1,0,0; -1,-1,0]';
-            % x0 = [1, 1, 0];
-
-            x0_c = num2cell(x0);
-
-            % Create location to put output vector of symbols
-            f = zeros([1 size(sensor_locations, 2)]);
-            Df = zeros([size(x0,2) size(sensor_locations, 2)]);
-            
             % Calculate function and derivative for each sensor
-            for i = 1:length(f)
-                sens_loc_c = num2cell(sensor_locations(:,i));
-                f(i) = obj.d_s(sens_loc_c{:}, x0_c{:});
-                Df(:,i) = obj.Dd_s(sens_loc_c{:}, x0_c{:});
-            end
-            % Convert vector of symbols to numbers
-            dist = f';
-            Ddist = Df';
+            dist = obj.d_s(sensor_locations, x0);
+            Ddist = obj.Dd_s(sensor_locations, x0);
         end
 
         function point = estimate_point_by_distances(obj, distances, sensor_locations, x0)
@@ -107,27 +98,57 @@ classdef iterative_estimator < handle
             point = current_estimate';
         end
 
-        function estimated_path = estimate_path_by_distance(obj)
-            arguments
-                obj
-            end
-
+        function init_sensors(obj)
             all_distances = zeros([size(obj.sensor_list, 2) size(obj.sensor_list(1).noisy_distances, 1)]);
             sensor_locations = zeros([size(obj.sensor_list, 2) size(obj.sensor_list(1).sensor_position, 2)]);
-            estimated_path = zeros([size(obj.sensor_list(1).noisy_distances, 1) size(obj.sensor_list(1).sensor_position, 2)]);
+            sensor_sigmas = zeros([size(obj.sensor_list, 2) 1]);
             for i = 1:size(obj.sensor_list, 2)
                 all_distances(i,:) = obj.sensor_list(i).noisy_distances;
                 sensor_locations(i,:) = obj.sensor_list(i).sensor_position;
+                sensor_sigmas(i) = obj.sensor_list(i).distance_noise_sigma;
             end
+            obj.all_distances = all_distances;
+            obj.sensor_locations = sensor_locations;
+            obj.sensor_sigmas = sensor_sigmas;
+        end
+
+        function estimated_path = estimate_path_by_distance(obj, options)
+            arguments
+                obj
+                options.show_waitbar = false
+            end
+            show_waitbar = options.show_waitbar;
+
+            all_distances = obj.all_distances;
+            sensor_locations = obj.sensor_locations;
+            estimated_path = zeros([size(obj.sensor_list(1).noisy_distances, 1) size(obj.sensor_list(1).sensor_position, 2)]);
             % estimated_path = obj.estimate_point_by_distances(all_distances(:,1), sensor_locations, obj.last_location);
-            f = waitbar(0, "please wait");
+            if show_waitbar
+                f = waitbar(0, "please wait");
+            end
             for i = 1:size(all_distances, 2)
                 current_point = obj.estimate_point_by_distances(all_distances(:,i), sensor_locations, obj.last_location);
                 obj.last_location = current_point;
                 estimated_path(i,:) = current_point;
-                waitbar(i/size(all_distances, 2), f, "processing");
+                if show_waitbar
+                    waitbar(i/size(all_distances, 2), f, "processing");
+                end
             end
-            close(f);
+            if show_waitbar
+                close(f);
+            end
+        end
+
+        function path_cov_err = get_cov_err(obj, true_path)
+            % path_cov_err is the expected [x_err, y_err, z_err] for each point on the path
+            path_cov_err = zeros(size(true_path));
+
+            for i = 1:size(true_path, 1)
+                current_point = true_path(i,:);
+                [h_x0, H] = obj.get_distances(obj.sensor_locations, current_point);
+                cov_vec = diag(inv(H'*H));
+                path_cov_err(i,:) = cov_vec';
+            end
         end
     end
 end
