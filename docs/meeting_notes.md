@@ -117,3 +117,32 @@
 - This is a tool that allows us to estimate performance without doing any experiments
 - Adding a sensor makes it so we don't need to do more than a single iteration to converge
 - We shouldn't use $inv$ in Matlab, and instead do something like $(H'H)\char`\\H'$ or $(eye/(H'H))H'$
+
+## 2023-05-21
+
+- Change the plots of the cov error to have xy error as one graph and z as another, so we only have 2 error graphs on each plot instead of 3.
+  - Need to change the error to be the square of the cov error, so the error will be in meters.
+  - The error is equal to the $\sigma$ times the DOP (in meters, as $\sigma$ is in meters and DOP is unit-less).
+- Filters:
+  - Daniel will send us reading materials about Kalman filter.
+  - There is an intro exercise that Daniel will send us. We don't need to solve it perfectly, just to get the gist of it.
+  - After we implement the Kalman filter we can move on to more advanced filters.
+- Trilateration without iterations:
+  - To get the location without iterations, we need to change the measurements so they are linear.
+  - Until now, we assumed that our measurements are $r_i = \sqrt{dx_i^2+dy_i^2+dz_i^2}+n_i$, where $n_i$ is the noise of the measurements.
+    - These are non-linear equations
+  - Instead of these equations, we can write linear equations:
+    - $r_1^2 = dx_1^2+dy_1^2+dz_1^2+n_i$
+    - $r_2^2 = dx_2^2+dy_2^2+dz_2^2+n_i$
+    - ...
+    - The noise of these equations gets changed a little, so they are not exactly correct.
+  - We can use the first and second equation to get:
+    - $r_1^2-r_2^2 = dx_1^2-dx_2^2 + dy_1^2-dy_2^2 + dz_1^2-dz_2^2 + n_1 - n_2$
+    - $dx_1^2-dx_2^2 = (x-x_1)^2 - (x-x_2)^2=(x-x_1-x+x_2)(2x+x_1+x_2)=(x_2-x_1)(2x+x_1+x_2)$
+  - We got one linear equation in x out of the equations for the first and second distance.
+  - Using at least 4 distances (meaning 4 sensors), we can get 3 sets of independent equations, which we can solve to get the location.
+    - We will be able solve these equations using a single matrix multiplication, without iterations.
+  - After implementing this, we should try and plot the error of this estimator against the other errors we have (cov and MC of iterative)
+    - The cov calculation for this will be different than the cov of the iterative, but should give about the same cov
+  - Daniel will send us the first paper that used this method for distances.
+  - This method can also be used for angles.
