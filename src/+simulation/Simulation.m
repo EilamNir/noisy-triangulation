@@ -63,12 +63,12 @@ else
         xlabel('time');
         ylabel('error');
         legend('Location','east');
-        plot(path_time, cov_MSE(:,1), '--','DisplayName', 'x cov', "color", "r")
-        plot(path_time, MC_MSE(:,1), 'DisplayName', 'x MC', "color", "#A2142F")
-        plot(path_time, cov_MSE(:,2), '--','DisplayName', 'y cov', "color", "g")
-        plot(path_time, MC_MSE(:,2), 'DisplayName', 'y MC', "color", "#77AC30")
-        plot(path_time, cov_MSE(:,3), '--','DisplayName', 'z cov', "color", "b")
-        plot(path_time, MC_MSE(:,3), 'DisplayName', 'z MC', "color", "#0072BD")
+        plot(path_time, (cov_MSE(:,1)).^0.5, '--','DisplayName', 'x cov', "color", "r")
+        plot(path_time, (MC_MSE(:,1)).^0.5, 'DisplayName', 'x MC', "color", "#A2142F")
+        plot(path_time, (cov_MSE(:,2)).^0.5, '--','DisplayName', 'y cov', "color", "g")
+        plot(path_time, (MC_MSE(:,2)).^0.5, 'DisplayName', 'y MC', "color", "#77AC30")
+        plot(path_time, (cov_MSE(:,3)).^0.5, '--','DisplayName', 'z cov', "color", "b")
+        plot(path_time, (MC_MSE(:,3)).^0.5, 'DisplayName', 'z MC', "color", "#0072BD")
 
         %% display path vs estimation
 
