@@ -7,6 +7,7 @@ classdef iterative_estimator < handle
         all_distances
         sensor_locations
         sensor_sigmas
+        sensor_norm
     end
     methods
         function obj = iterative_estimator(sensor_list, initial_location_guess)
@@ -98,18 +99,34 @@ classdef iterative_estimator < handle
             point = current_estimate';
         end
 
+        function point = estimate_point_by_distances_non_iterative(obj, distances, sensor_locations, x0)
+            sensor_diff_matrix = sensor_locations(2:end,:)-sensor_locations(1,:);
+            sensor_sub_norm = obj.sensor_norm(2:end)-obj.sensor_norm(1);
+            y = distances(1)^2-distances(2:end).^2;
+            point = 0.5*(inv(sensor_diff_matrix+eye([3,3])*0.1)*(y+sensor_sub_norm'));
+%             m11 = [1 0 0;
+%                    0 0 0;
+%                    0 0 0];
+%             m22 = [0 0 0
+%                    0 1 0
+%                    0 0 0];
+%             m33 = [0 0 0
+%                    0 0 0
+%                    0 0 1];
+%             v = [1;1;1];
+%             point = 0.5*(inv(sensor_diff_matrix+eye([3,3])*0.1)*(y-...
+%                     (m11*sensor_diff_matrix*sensor_sum_matrix*m11+...
+%                     m22*sensor_diff_matrix*sensor_sum_matrix*m22+...
+%                     m33*sensor_diff_matrix*sensor_sum_matrix*m33)*v));
+        end
+        
         function init_sensors(obj)
-            all_distances = zeros([size(obj.sensor_list, 2) size(obj.sensor_list(1).noisy_distances, 1)]);
-            sensor_locations = zeros([size(obj.sensor_list, 2) size(obj.sensor_list(1).sensor_position, 2)]);
-            sensor_sigmas = zeros([size(obj.sensor_list, 2) 1]);
             for i = 1:size(obj.sensor_list, 2)
-                all_distances(i,:) = obj.sensor_list(i).noisy_distances;
-                sensor_locations(i,:) = obj.sensor_list(i).sensor_position;
-                sensor_sigmas(i) = obj.sensor_list(i).distance_noise_sigma;
+                obj.all_distances(i,:) = obj.sensor_list(i).noisy_distances;
+                obj.sensor_locations(i,:) = obj.sensor_list(i).sensor_position;
+                obj.sensor_sigmas(i) = obj.sensor_list(i).distance_noise_sigma;
+                obj.sensor_norm(i) = norm(obj.sensor_list(i).sensor_position)^2;
             end
-            obj.all_distances = all_distances;
-            obj.sensor_locations = sensor_locations;
-            obj.sensor_sigmas = sensor_sigmas;
         end
 
         function estimated_path = estimate_path_by_distance(obj, options)
@@ -119,19 +136,15 @@ classdef iterative_estimator < handle
             end
             show_waitbar = options.show_waitbar;
 
-            all_distances = obj.all_distances;
-            sensor_locations = obj.sensor_locations;
-            estimated_path = zeros([size(obj.sensor_list(1).noisy_distances, 1) size(obj.sensor_list(1).sensor_position, 2)]);
-            % estimated_path = obj.estimate_point_by_distances(all_distances(:,1), sensor_locations, obj.last_location);
             if show_waitbar
                 f = waitbar(0, "please wait");
             end
-            for i = 1:size(all_distances, 2)
-                current_point = obj.estimate_point_by_distances(all_distances(:,i), sensor_locations, obj.last_location);
+            for i = 1:size(obj.all_distances, 2)
+                current_point = obj.estimate_point_by_distances_non_iterative(obj.all_distances(:,i), obj.sensor_locations, obj.last_location);
                 obj.last_location = current_point;
                 estimated_path(i,:) = current_point;
                 if show_waitbar
-                    waitbar(i/size(all_distances, 2), f, "processing");
+                    waitbar(i/size(obj.all_distances, 2), f, "processing");
                 end
             end
             if show_waitbar

@@ -2,7 +2,7 @@ close all; clear; clc;
 %% simulation settings ****************************************************
 SensorPos = [-5000,0,0; 400, -7400, 0; 800, 800, 0];
 color_list = ['r', 'g', 'y', 'k', 'm'];
-TargetPos = [0,0,1000];
+TargetPos = [0,0,5000];
 TargetSpeed_xy = 50;
 TargetSpeed_z = 10;
 TargetRotSpeed = 3;
@@ -26,10 +26,10 @@ if should_generate_data
     % create estimation and save to file
     import simulation.create_simulations.save_simulation_MC
     % [true_path, path_time, estimated_path, MC_MSE, cov_mat, cov_MSE, SensorPos] = save_simulation_MC(SensorPos, path1.path, path1.time, 10000, "../data/MC_original.mat");
-    save_simulation_MC(SensorPos, path1.path, path1.time, 10000, "../data/MC_original_10000.mat");
-    save_simulation_MC([-1000,-4000,0; -2000,-6000,0; 0,-5000,0], path1.path, path1.time, 10000, "../data/MC_bunched_sensors_10000.mat");
-    save_simulation_MC([-5000,0,5000; 400, -7400, 5000; 800, 800, 5000], path1.path, path1.time, 10000, "../data/MC_high_sensors_10000.mat");
-    save_simulation_MC([-5000,0,0; 400, -7400, 0; 800, 800, 0; 8000, 1000, 0], path1.path, path1.time, 10000, "../data/MC_4_sensors_10000.mat");
+%     save_simulation_MC(SensorPos, path1.path, path1.time, 10000, "../data/MC_original_10000.mat");
+%     save_simulation_MC([-1000,-4000,0; -2000,-6000,0; 0,-5000,0], path1.path, path1.time, 10000, "../data/MC_bunched_sensors_10000.mat");
+%     save_simulation_MC([-5000,0,5000; 400, -7400, 5000; 800, 800, 5000], path1.path, path1.time, 10000, "../data/MC_high_sensors_10000.mat");
+    save_simulation_MC([-5000,0,-1000; 400, -7400, 0; 800, 800, 500; 8000, 1000, 0], path1.path, path1.time, 100, "../data/MC_4_sensors_100.mat");
 else
     % load estimation from file
     import simulation.create_simulations.load_simulation_MC
@@ -37,32 +37,33 @@ else
                             'Select One or More Files', ...
                             'MultiSelect', 'on');
     filenames = fullfile(path,file);
-                     
-    for file_index = 1:size(filenames, 2)
+    SimNum = size(filenames,2);  
+    for file_index = 1:SimNum
         filename = filenames{file_index};
         [true_path, path_time, estimated_path, MC_MSE, cov_mat, cov_MSE, SensorPos] = load_simulation_MC(filename);
 
         GDOP = sqrt(sum(cov_mat, 2));
         HDOP = sqrt(sum(cov_mat(:, 1:2), 2));
         VDOP = sqrt(cov_mat(:, 3));
-        figure
-        title(filename, 'Interpreter', 'none')
+        
+        subplot(3,SimNum,file_index)
+        title(file{file_index}, 'Interpreter', 'none')
         hold on
         grid minor
         xlabel('time');
         ylabel('error');
-        legend('Location','east');
+        legend('fontsize', 5);
         plot(path_time, GDOP, 'DisplayName', 'GDOP')
         plot(path_time, VDOP, 'DisplayName', 'VDOP')
         plot(path_time, HDOP, 'DisplayName', 'HDOP')
 
-        figure
-        title(filename, 'Interpreter', 'none')
+        subplot(3,SimNum,file_index+SimNum)
+        title(file{file_index}, 'Interpreter', 'none')
         hold on
         grid minor
         xlabel('time');
         ylabel('error');
-        legend('Location','east');
+        legend('fontsize', 5);
         plot(path_time, cov_MSE(:,1), '--','DisplayName', 'x cov', "color", "r")
         plot(path_time, MC_MSE(:,1), 'DisplayName', 'x MC', "color", "#A2142F")
         plot(path_time, cov_MSE(:,2), '--','DisplayName', 'y cov', "color", "g")
@@ -73,8 +74,8 @@ else
         %% display path vs estimation
 
         sleep_duration = 0.1;
-        figure
-        title(filename, 'Interpreter', 'none')
+        subplot(3,SimNum,file_index+2*SimNum)
+        title(file{file_index}, 'Interpreter', 'none')
         hold on 
         grid minor
         view([-37.5 30]);
