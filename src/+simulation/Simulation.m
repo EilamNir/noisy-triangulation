@@ -2,7 +2,7 @@ close all; clear; clc;
 %% simulation settings ****************************************************
 SensorPos = [-5000,0,0; 400, -7400, 0; 800, 800, 0];
 color_list = ['r', 'g', 'y', 'k', 'm'];
-TargetPos = [0,0,1000];
+TargetPos = [0,0,5000];
 TargetSpeed_xy = 50;
 TargetSpeed_z = 10;
 TargetRotSpeed = 3;
@@ -29,7 +29,7 @@ if should_generate_data
     % save_simulation_MC(SensorPos, path1.path, path1.time, 10000, "../data/MC_original_10000.mat");
     % save_simulation_MC([-1000,-4000,0; -2000,-6000,0; 0,-5000,0], path1.path, path1.time, 10000, "../data/MC_bunched_sensors_10000.mat");
     % save_simulation_MC([-5000,0,-5000; 400, -7400, -5000; 800, 800, -5000], path1.path, path1.time, 10000, "../data/MC_low_sensors_10000.mat");
-    % save_simulation_MC([-5000,0,0; 400, -7400, 0; 800, 800, 0; 8000, 1000, 0], path1.path, path1.time, 10000, "../data/MC_4_sensors_10000.mat");
+    save_simulation_MC([-5000,0,0; 400, -7400, 0; 800, 800, 0; 8000, 1000, 0], path1.path, path1.time, 100, "../data/MC_4_sensors_100.mat");
 else
     % load estimation from file
     import simulation.create_simulations.load_simulation_MC
