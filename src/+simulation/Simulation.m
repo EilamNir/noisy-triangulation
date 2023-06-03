@@ -36,33 +36,41 @@ else
     [file,path] = uigetfile('../data/*.mat',...
                             'Select One or More Files', ...
                             'MultiSelect', 'on');
+    if ~iscell(file)
+        temp_cell1 = cell(1);
+        temp_cell1{1} = file;
+        file = temp_cell1;
+        temp_cell2 = cell(1);
+        temp_cell2{1} = path;
+        path = temp_cell2;
+    end
     filenames = fullfile(path,file);
-                     
-    for file_index = 1:size(filenames, 2)
+    SimNum = size(filenames,2);  
+    for file_index = 1:SimNum
         filename = filenames{file_index};
         [true_path, path_time, estimated_path, MC_MSE, cov_mat, cov_MSE, SensorPos] = load_simulation_MC(filename);
 
         GDOP = sqrt(sum(cov_mat, 2));
         HDOP = sqrt(sum(cov_mat(:, 1:2), 2));
         VDOP = sqrt(cov_mat(:, 3));
-        figure
-        title(filename, 'Interpreter', 'none')
+        subplot(3,SimNum,file_index)
+        title(file{file_index}, 'Interpreter', 'none')
         hold on
         grid minor
         xlabel('time');
         ylabel('error');
-        legend('Location','east');
+        legend('fontsize', 5);
         plot(path_time, GDOP, 'DisplayName', 'GDOP')
         plot(path_time, VDOP, 'DisplayName', 'VDOP')
         plot(path_time, HDOP, 'DisplayName', 'HDOP')
 
-        figure
-        title(filename, 'Interpreter', 'none')
+        subplot(3,SimNum,file_index+SimNum)
+        title(file{file_index}, 'Interpreter', 'none')
         hold on
         grid minor
         xlabel('time');
         ylabel('error');
-        legend('Location','east');
+        legend('fontsize', 5);
         plot(path_time, (cov_MSE(:,1)).^0.5, '--','DisplayName', 'x cov', "color", "r")
         plot(path_time, (MC_MSE(:,1)).^0.5, 'DisplayName', 'x MC', "color", "#A2142F")
         plot(path_time, (cov_MSE(:,2)).^0.5, '--','DisplayName', 'y cov', "color", "g")
@@ -73,8 +81,8 @@ else
         %% display path vs estimation
 
         sleep_duration = 0.1;
-        figure
-        title(filename, 'Interpreter', 'none')
+        subplot(3,SimNum,file_index+2*SimNum)
+        title(file{file_index}, 'Interpreter', 'none')
         hold on 
         grid minor
         view([-37.5 30]);
