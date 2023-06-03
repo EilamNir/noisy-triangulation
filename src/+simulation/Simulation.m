@@ -28,7 +28,8 @@ if should_generate_data
     % save_simulation_MC(SensorPos, path1.path, path1.time, 10000, "../data/MC_original_10000.mat");
     % save_simulation_MC([-1000,-4000,0; -2000,-6000,0; 0,-5000,0], path1.path, path1.time, 10000, "../data/MC_bunched_sensors_10000.mat");
     % save_simulation_MC([-5000,0,-5000; 400, -7400, -5000; 800, 800, -5000], path1.path, path1.time, 10000, "../data/MC_low_sensors_10000.mat");
-    save_simulation_MC([-5000,0,-1000; 400, -7400, 0; 800, 800, 500; 8000, 1000, 0], path1.path, path1.time, 100, "../data/non_iter_100.mat");
+    % save_simulation_MC([-5000,0,-1000; 400, -7400, 0; 800, 800, 500; 8000, 1000, 0], path1.path, path1.time, 100, "../data/non_iter_navidi_100.mat");
+    save_simulation_MC([-5000,0,0; 400, -7400, 0; 800, 800, 0], path1.path, path1.time, 100, "../data/non_iter_navidi_3_sensors_100.mat");
 else
     % load estimation from file
     [file,path] = uigetfile('../data/*.mat',...

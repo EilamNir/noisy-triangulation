@@ -2,7 +2,7 @@ classdef measurements
     methods (Static)
         function [mean_err_iterative, mean_err_non_iterative] = gen_monte_carlo(sensor_list, path, number_iterations)
             import estimation.iterative_estimator;
-            import estimation.non_iterative_estimator;
+            import estimation.non_iterative_estimator_navidi;
             % monte carlo
             SaveRuns = [];
             total_err_iter = zeros(size(path));
@@ -13,7 +13,7 @@ classdef measurements
                     sensor.calculate_measurements(path);
                 end
                 iter_est = iterative_estimator(sensor_list, path(1,:));
-                non_iter_est = non_iterative_estimator(sensor_list, path(1,:));
+                non_iter_est = non_iterative_estimator_navidi(sensor_list, path(1,:));
                 
                 estimated_path_iter = iter_est.estimate_path_by_distance();
                 estimated_path_non_iter = non_iter_est.estimate_path_by_distance();

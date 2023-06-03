@@ -26,10 +26,10 @@ classdef create_simulations
 
             % test estimators
             import estimation.iterative_estimator;
-            import estimation.non_iterative_estimator;
+            import estimation.non_iterative_estimator_navidi;
 
             iter_est = iterative_estimator(sensor_list, true_path(1,:));
-            non_iter_est = non_iterative_estimator(sensor_list, true_path(1,:));
+            non_iter_est = non_iterative_estimator_navidi(sensor_list, true_path(1,:));
 
             estimated_path_iter = iter_est.estimate_path_by_distance();
             estimated_path_non_iter = non_iter_est.estimate_path_by_distance();
