@@ -25,14 +25,12 @@ if should_generate_data
 
     % create estimation and save to file
     import simulation.create_simulations.save_simulation_MC
-    % [true_path, path_time, estimated_path, MC_MSE, cov_mat, cov_MSE, SensorPos] = save_simulation_MC(SensorPos, path1.path, path1.time, 10000, "../data/MC_original.mat");
     % save_simulation_MC(SensorPos, path1.path, path1.time, 10000, "../data/MC_original_10000.mat");
     % save_simulation_MC([-1000,-4000,0; -2000,-6000,0; 0,-5000,0], path1.path, path1.time, 10000, "../data/MC_bunched_sensors_10000.mat");
     % save_simulation_MC([-5000,0,-5000; 400, -7400, -5000; 800, 800, -5000], path1.path, path1.time, 10000, "../data/MC_low_sensors_10000.mat");
-    save_simulation_MC([-5000,0,0; 400, -7400, 0; 800, 800, 0; 8000, 1000, 0], path1.path, path1.time, 100, "../data/MC_4_sensors_100.mat");
+    save_simulation_MC([-5000,0,-1000; 400, -7400, 0; 800, 800, 500; 8000, 1000, 0], path1.path, path1.time, 100, "../data/non_iter_100.mat");
 else
     % load estimation from file
-    import simulation.create_simulations.load_simulation_MC
     [file,path] = uigetfile('../data/*.mat',...
                             'Select One or More Files', ...
                             'MultiSelect', 'on');
@@ -48,21 +46,27 @@ else
     SimNum = size(filenames,2);  
     for file_index = 1:SimNum
         filename = filenames{file_index};
-        [true_path, path_time, estimated_path, MC_MSE, cov_mat, cov_MSE, SensorPos] = load_simulation_MC(filename);
+        load(filename);
 
-        GDOP = sqrt(sum(cov_mat, 2));
-        HDOP = sqrt(sum(cov_mat(:, 1:2), 2));
-        VDOP = sqrt(cov_mat(:, 3));
+        GDOP_iter = sqrt(sum(cov_mat_iter, 2));
+        HDOP_iter = sqrt(sum(cov_mat_iter(:, 1:2), 2));
+        VDOP_iter = sqrt(cov_mat_iter(:, 3));
+        GDOP_non_iter = sqrt(sum(cov_mat_non_iter, 2));
+        HDOP_non_iter = sqrt(sum(cov_mat_non_iter(:, 1:2), 2));
+        VDOP_non_iter = sqrt(cov_mat_non_iter(:, 3));
         subplot(3,SimNum,file_index)
         title(file{file_index}, 'Interpreter', 'none')
         hold on
         grid minor
         xlabel('time');
         ylabel('error');
-        legend('fontsize', 5);
-        plot(path_time, GDOP, 'DisplayName', 'GDOP')
-        plot(path_time, VDOP, 'DisplayName', 'VDOP')
-        plot(path_time, HDOP, 'DisplayName', 'HDOP')
+        legend();
+        plot(path_time, GDOP_iter, 'DisplayName', 'GDOP iter')
+        plot(path_time, VDOP_iter, 'DisplayName', 'VDOP iter')
+        plot(path_time, HDOP_iter, 'DisplayName', 'HDOP iter')
+        plot(path_time, GDOP_non_iter, 'DisplayName', 'GDOP non iter')
+        plot(path_time, VDOP_non_iter, 'DisplayName', 'VDOP non iter')
+        plot(path_time, HDOP_non_iter, 'DisplayName', 'HDOP non iter')
 
         subplot(3,SimNum,file_index+SimNum)
         title(file{file_index}, 'Interpreter', 'none')
@@ -70,13 +74,20 @@ else
         grid minor
         xlabel('time');
         ylabel('error');
-        legend('fontsize', 5);
-        plot(path_time, (cov_MSE(:,1)).^0.5, '--','DisplayName', 'x cov', "color", "r")
-        plot(path_time, (MC_MSE(:,1)).^0.5, 'DisplayName', 'x MC', "color", "#A2142F")
-        plot(path_time, (cov_MSE(:,2)).^0.5, '--','DisplayName', 'y cov', "color", "g")
-        plot(path_time, (MC_MSE(:,2)).^0.5, 'DisplayName', 'y MC', "color", "#77AC30")
-        plot(path_time, (cov_MSE(:,3)).^0.5, '--','DisplayName', 'z cov', "color", "b")
-        plot(path_time, (MC_MSE(:,3)).^0.5, 'DisplayName', 'z MC', "color", "#0072BD")
+        legend();
+        plot(path_time, (cov_MSE_iter(:,1)).^0.5, '--','DisplayName', 'x cov iter')
+        plot(path_time, (MC_MSE_iter(:,1)).^0.5, 'DisplayName', 'x MC iter')
+        plot(path_time, (cov_MSE_iter(:,2)).^0.5, '--','DisplayName', 'y cov iter')
+        plot(path_time, (MC_MSE_iter(:,2)).^0.5, 'DisplayName', 'y MC iter')
+        plot(path_time, (cov_MSE_iter(:,3)).^0.5, '--','DisplayName', 'z cov iter')
+        plot(path_time, (MC_MSE_iter(:,3)).^0.5, 'DisplayName', 'z MC iter')
+
+        plot(path_time, (cov_MSE_non_iter(:,1)).^0.5, '--','DisplayName', 'x cov non iter')
+        plot(path_time, (MC_MSE_non_iter(:,1)).^0.5, 'DisplayName', 'x MC non iter')
+        plot(path_time, (cov_MSE_non_iter(:,2)).^0.5, '--','DisplayName', 'y cov non iter')
+        plot(path_time, (MC_MSE_non_iter(:,2)).^0.5, 'DisplayName', 'y MC non iter')
+        plot(path_time, (cov_MSE_non_iter(:,3)).^0.5, '--','DisplayName', 'z cov non iter')
+        plot(path_time, (MC_MSE_non_iter(:,3)).^0.5, 'DisplayName', 'z MC non iter')
 
         %% display path vs estimation
 
@@ -105,15 +116,19 @@ else
 
                 ax1 = plot3(true_path(1:i,1), true_path(1:i,2), true_path(1:i,3), 'b.-');
 
-                prediction_position = estimated_path(i,:);
-                ax3 = plot3(prediction_position(1), prediction_position(2), prediction_position(3), 'r*'); 
+                prediction_position_iter = estimated_path_iter(i,:);
+                prediction_position_non_iter = estimated_path_non_iter(i,:);
+                ax3 = plot3(prediction_position_iter(1), prediction_position_iter(2), prediction_position_iter(3), 'r*'); 
+                ax3 = plot3(prediction_position_non_iter(1), prediction_position_non_iter(2), prediction_position_non_iter(3), 'g*'); 
                 pause(sleep_duration);
                 delete(ax3);
-                ax3 = plot3(prediction_position(1), prediction_position(2), prediction_position(3), 'r.'); 
+                ax3 = plot3(prediction_position_iter(1), prediction_position_iter(2), prediction_position_iter(3), 'r.'); 
+                ax3 = plot3(prediction_position_non_iter(1), prediction_position_non_iter(2), prediction_position_non_iter(3), 'g.'); 
             end
         else
             plot3(true_path(:,1), true_path(:,2), true_path(:,3), 'b.-');
-            plot3(estimated_path(:,1), estimated_path(:,2), estimated_path(:,3), 'r.');
+            plot3(estimated_path_iter(:,1), estimated_path_iter(:,2), estimated_path_iter(:,3), 'r.');
+            plot3(estimated_path_non_iter(:,1), estimated_path_non_iter(:,2), estimated_path_non_iter(:,3), 'g.');
         end
     end
 end
