@@ -138,7 +138,7 @@
     - The noise of these equations gets changed a little, so they are not exactly correct.
   - We can use the first and second equation to get:
     - $r_1^2-r_2^2 = dx_1^2-dx_2^2 + dy_1^2-dy_2^2 + dz_1^2-dz_2^2 + n_1 - n_2$
-    - $dx_1^2-dx_2^2 = (x-x_1)^2 - (x-x_2)^2=(x-x_1-x+x_2)(2x+x_1+x_2)=(x_2-x_1)(2x+x_1+x_2)$
+    - $dx_1^2-dx_2^2 = (x-x_1)^2 - (x-x_2)^2=(x-x_1-x+x_2)(2x-x_1-x_2)=(x_2-x_1)(2x-x_1-x_2)$
   - We got one linear equation in x out of the equations for the first and second distance.
   - Using at least 4 distances (meaning 4 sensors), we can get 3 sets of independent equations, which we can solve to get the location.
     - We will be able solve these equations using a single matrix multiplication, without iterations.
