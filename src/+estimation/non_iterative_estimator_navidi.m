@@ -61,9 +61,7 @@ classdef non_iterative_estimator_navidi < handle
             % path_cov_err is the expected [x_err, y_err, z_err] for each point on the path
             path_cov_err = zeros(size(true_path));
 
-            for i = 1:size(true_path, 1)
-                current_point = true_path(i,:);
-                
+            for i = 1:size(true_path, 1)                
                 cov_vec = diag(inv(obj.X_star'*obj.X_star));
                 path_cov_err(i,:) = cov_vec';
             end

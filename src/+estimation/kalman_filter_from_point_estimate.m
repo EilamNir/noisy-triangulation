@@ -43,16 +43,16 @@ classdef kalman_filter_from_point_estimate < handle
 
         function [X] = get_initial_state(obj, x1, x2)
             % initial location and speed from two first estimated points
-            v = (x2' - x1') / obj.delta_t;
-            x = (x2' + x1') / 2;
-            % v = [50; 0; 10];
-            % x = [0; 0; 5000];
+            % v = (x2' - x1') / obj.delta_t;
+            % x = (x2' + x1') / 2;
+            v = [50; 0; 10];
+            x = [0; 0; 5000];
             X = obj.v_to_X' * v + obj.H' * x;
         end
 
         function [X, P] = kalman_step(obj, last_X, last_P, current_measurement)
             P = obj.F * last_P * obj.F' + obj.Q;
-            L_k = P * obj.H' / (obj.H * P * obj.H' + obj.sigma_v^2);
+            L_k = P * obj.H' / (obj.H * P * obj.H' + eye(3) * obj.sigma_v^2);
             % X = obj.F * last_X + obj.G * normrnd(0,1); % Why do we need this normrnd(0,1)?
             X = obj.F * last_X;
             % X = X + L_k * (current_measurement' - obj.H * X);

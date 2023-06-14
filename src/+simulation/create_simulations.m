@@ -37,7 +37,7 @@ classdef create_simulations
             % get cov error
             cov_mat_iter = iter_est.get_cov_err(true_path);
             cov_MSE_iter = cov_mat_iter * sensor_dist_sigma^2;
-            cov_mat_non_iter = iter_est.get_cov_err(true_path);
+            cov_mat_non_iter = non_iter_est.get_cov_err(true_path);
             cov_MSE_non_iter = cov_mat_non_iter * sensor_dist_sigma^2;
 
             save(file_path, "true_path", "path_time", "estimated_path_iter", "estimated_path_non_iter", "MC_MSE_iter", "MC_MSE_non_iter", "cov_mat_iter", "cov_MSE_iter", "cov_mat_non_iter", "cov_MSE_non_iter", "SensorPos")

@@ -9,10 +9,10 @@ TargetRotSpeed = 3;
 TimeRes = 0.5;
 animation = false;
 
-show_iterative = false;
-show_non_iterative = true;
-% show_iterative = true;
-% show_non_iterative = false;
+% show_iterative = false;
+% show_non_iterative = true;
+show_iterative = true;
+show_non_iterative = false;
 %%
 
 % make the results reproducible by seeding the random number generator
@@ -60,9 +60,9 @@ non_iter_point_estimation_err = sum((estimated_path_non_iter-true_path).^2, 2).^
 % use Kalman Filter on estimations
 import estimation.kalman_filter_from_point_estimate;
 sigma_a = 1;
-sigma_v = 1;
+sigma_v = 100;
 non_diag_reduction_ratio = 2;
-current_sample_reduction = 0.1;
+current_sample_reduction = 1;
 iter_KF = kalman_filter_from_point_estimate(TimeRes, sigma_a, sigma_v, non_diag_reduction_ratio, current_sample_reduction);
 non_iter_KF = kalman_filter_from_point_estimate(TimeRes, sigma_a, sigma_v, non_diag_reduction_ratio, current_sample_reduction);
 

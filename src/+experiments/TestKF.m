@@ -26,15 +26,15 @@ for i = 1:T:500
     x(end+1) = x(end) + T*v(i);
     x_m(end+1) = x(end) + normrnd(0,sigma_v);
 end
-plot(x,t,'b.', 'DisplayName', 'true path');
-xlabel('x');
-ylabel('time');
+plot(t, x,'b.', 'DisplayName', 'true path');
+ylabel('x');
+xlabel('time');
 legend();
 
 sub2 = subplot(4,1,2)
-ax2 = plot(x_m,t,'b.', 'DisplayName', 'measurements');
-xlabel('x');
-ylabel('time');
+ax2 = plot(t, x_m,'b.', 'DisplayName', 'measurements');
+ylabel('x');
+xlabel('time');
 legend();
 
 for i = 1:T:500
@@ -46,9 +46,9 @@ for i = 1:T:500
 end
 
 sub3 = subplot(4,1,3)
-ax3 = plot(x_k(1,:),t,'b.', 'DisplayName', 'estimated path');
-xlabel('x');
-ylabel('time');
+ax3 = plot(t, x_k(1,:),'b.', 'DisplayName', 'estimated path');
+ylabel('x');
+xlabel('time');
 legend();
 
 linkaxes([sub1,sub2,sub3],'x')
@@ -59,17 +59,17 @@ grid minor;
 legend();
 plot(abs(x_k(1,:)-x),'r', 'DisplayName', 'estimation error');
 plot(abs(x_m-x),'g', 'DisplayName', 'measurement error');
-xlabel('time');
-ylabel('|\Delta x|');
+ylabel('time');
+xlabel('|\Delta x|');
 
 % {
 figure
 subplot(2,1,1)
 hold on
 grid minor
-ax1 = plot(x_k(1,1),1,'k.', 'DisplayName', 'estimation');
-ax2 = plot(x(1),1,'r.', 'DisplayName', 'true path');
-ax3 = plot(x_m(1),1,'b.', 'DisplayName', 'measurements');
+ax1 = plot(1,x_k(1,1),'k.', 'DisplayName', 'estimation');
+ax2 = plot(1, x(1),'r.', 'DisplayName', 'true path');
+ax3 = plot(1, x_m(1),'b.', 'DisplayName', 'measurements');
 legend([ax1, ax2, ax3], 'location', 'southeast');
 subplot(2,1,2)
 ax4 = plot(1, abs(x_k(1,1) - x(1)), 'k.', 'DisplayName', 'estimation error');
@@ -79,17 +79,17 @@ grid minor
 % legend()
 for i = 1:T:500
     subplot(2,1,1)
-    ax1 = plot(x_k(1,i),i,'k*','HandleVisibility','off');
-    ax2 = plot(x(i),i,'r+','HandleVisibility','off');
-    ax3 = plot(x_m(i),i,'bo','HandleVisibility','off');
+    ax1 = plot(i, x_k(1,i),'k*','HandleVisibility','off');
+    ax2 = plot(i ,x(i),'r+','HandleVisibility','off');
+    ax3 = plot(i ,x_m(i),'bo','HandleVisibility','off');
     subplot(2,1,2)
     ax4 = plot(i, abs(x_k(1,i) - x(i)), 'k*','HandleVisibility','off');
     pause(0.1);
     subplot(2,1,1)
     delete([ax1,ax2,ax3])
-    plot(x_k(1,i),i,'k.','HandleVisibility','off');
-    plot(x(i),i,'r.','HandleVisibility','off');
-    plot(x_m(i),i,'b.','HandleVisibility','off');
+    plot(i, x_k(1,i),'k.','HandleVisibility','off');
+    plot(i, x(i),'r.','HandleVisibility','off');
+    plot(i, x_m(i),'b.','HandleVisibility','off');
     subplot(2,1,2)
     delete([ax4])
     plot(i, abs(x_k(1,i) - x(i)), 'k.','HandleVisibility','off');
