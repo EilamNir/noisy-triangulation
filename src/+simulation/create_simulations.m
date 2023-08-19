@@ -22,25 +22,30 @@ classdef create_simulations
 
             % monte carlo
             import utils.measurements.gen_monte_carlo;
-            [MC_MSE_iter, MC_MSE_non_iter] = gen_monte_carlo(sensor_list, true_path, MC_iterations);
+            [MC_MSE_iter, MC_MSE_non_iter, MC_MSE_deep_learn] = gen_monte_carlo(sensor_list, true_path, MC_iterations);
 
             % test estimators
             import estimation.iterative_estimator;
             import estimation.non_iterative_estimator_navidi;
+            import estimation.deep_learning_estimator;
 
             iter_est = iterative_estimator(sensor_list, true_path(1,:));
             non_iter_est = non_iterative_estimator_navidi(sensor_list, true_path(1,:));
+            deep_learn_est = deep_learning_estimator(sensor_list, true_path(1,:));
 
             estimated_path_iter = iter_est.estimate_path_by_distance();
             estimated_path_non_iter = non_iter_est.estimate_path_by_distance();
+            estimated_path_deep_learn = deep_learn_est.estimate_path_by_distance();
 
             % get cov error
             cov_mat_iter = iter_est.get_cov_err(true_path);
             cov_MSE_iter = cov_mat_iter * sensor_dist_sigma^2;
             cov_mat_non_iter = non_iter_est.get_cov_err(true_path);
             cov_MSE_non_iter = cov_mat_non_iter * sensor_dist_sigma^2;
+            cov_mat_deep_learn = deep_learn_est.get_cov_err(true_path);
+            cov_MSE_deep_learn = cov_mat_deep_learn * sensor_dist_sigma^2;
 
-            save(file_path, "true_path", "path_time", "estimated_path_iter", "estimated_path_non_iter", "MC_MSE_iter", "MC_MSE_non_iter", "cov_mat_iter", "cov_MSE_iter", "cov_mat_non_iter", "cov_MSE_non_iter", "SensorPos")
+            save(file_path, "true_path", "path_time", "estimated_path_iter", "estimated_path_non_iter", "estimated_path_deep_learn", "MC_MSE_iter", "MC_MSE_non_iter", "MC_MSE_deep_learn", "cov_mat_iter", "cov_MSE_iter", "cov_mat_non_iter", "cov_MSE_non_iter", "cov_mat_deep_learn", "cov_MSE_deep_learn", "SensorPos")
         end
     end
 end

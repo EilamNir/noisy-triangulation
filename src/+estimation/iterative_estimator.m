@@ -99,17 +99,11 @@ classdef iterative_estimator < handle
         end
 
         function init_sensors(obj)
-            all_distances = zeros([size(obj.sensor_list, 2) size(obj.sensor_list(1).noisy_distances, 1)]);
-            sensor_locations = zeros([size(obj.sensor_list, 2) size(obj.sensor_list(1).sensor_position, 2)]);
-            sensor_sigmas = zeros([size(obj.sensor_list, 2) 1]);
             for i = 1:size(obj.sensor_list, 2)
-                all_distances(i,:) = obj.sensor_list(i).noisy_distances;
-                sensor_locations(i,:) = obj.sensor_list(i).sensor_position;
-                sensor_sigmas(i) = obj.sensor_list(i).distance_noise_sigma;
+                obj.all_distances(i,:) = obj.sensor_list(i).noisy_distances;
+                obj.sensor_locations(i,:) = obj.sensor_list(i).sensor_position;
+                obj.sensor_sigmas(i) = obj.sensor_list(i).distance_noise_sigma;
             end
-            obj.all_distances = all_distances;
-            obj.sensor_locations = sensor_locations;
-            obj.sensor_sigmas = sensor_sigmas;
         end
 
         function estimated_path = estimate_path_by_distance(obj, options)
@@ -118,20 +112,17 @@ classdef iterative_estimator < handle
                 options.show_waitbar = false
             end
             show_waitbar = options.show_waitbar;
-
-            all_distances = obj.all_distances;
-            sensor_locations = obj.sensor_locations;
-            estimated_path = zeros([size(obj.sensor_list(1).noisy_distances, 1) size(obj.sensor_list(1).sensor_position, 2)]);
-            % estimated_path = obj.estimate_point_by_distances(all_distances(:,1), sensor_locations, obj.last_location);
+            
             if show_waitbar
                 f = waitbar(0, "please wait");
             end
-            for i = 1:size(all_distances, 2)
-                current_point = obj.estimate_point_by_distances(all_distances(:,i), sensor_locations, obj.last_location);
+            
+            for i = 1:size(obj.all_distances, 2)
+                current_point = obj.estimate_point_by_distances(obj.all_distances(:,i), obj.sensor_locations, obj.last_location);
                 obj.last_location = current_point;
                 estimated_path(i,:) = current_point;
                 if show_waitbar
-                    waitbar(i/size(all_distances, 2), f, "processing");
+                    waitbar(i/size(obj.all_distances, 2), f, "processing");
                 end
             end
             if show_waitbar

@@ -1,4 +1,4 @@
-classdef non_iterative_estimator < handle
+classdef deep_learning_estimator < handle
     properties
         sensor_list
         last_location
@@ -7,10 +7,9 @@ classdef non_iterative_estimator < handle
         all_distances
         sensor_locations
         sensor_sigmas
-        sensor_norm
     end
     methods
-        function obj = non_iterative_estimator(sensor_list, initial_location_guess)
+        function obj = deep_learning_estimator(sensor_list, initial_location_guess)
             arguments
                 sensor_list
                 initial_location_guess
@@ -51,11 +50,10 @@ classdef non_iterative_estimator < handle
             Ddist = obj.Dd_s(sensor_locations, x0);
         end
 
-        function point = estimate_point_by_distances_non_iterative(obj, distances, sensor_locations, x0)
-            sensor_diff_matrix = sensor_locations(2:end,:)-sensor_locations(1,:);
-            sensor_sub_norm = obj.sensor_norm(2:end)-obj.sensor_norm(1);
-            y = distances(1)^2-distances(2:end).^2;
-            point = 0.5*(inv(sensor_diff_matrix+eye([3,3])*0.1)*(y+sensor_sub_norm'));
+        function point = estimate_point_by_distances_deep_learning(obj, distances, sensor_locations, x0)
+            model = load('../DeepLearning/train_model');
+            current_input = [sensor_locations; distances'];
+            point = predict(model.net, current_input);
         end
 
         function init_sensors(obj)
@@ -63,7 +61,6 @@ classdef non_iterative_estimator < handle
                 obj.all_distances(i,:) = obj.sensor_list(i).noisy_distances;
                 obj.sensor_locations(i,:) = obj.sensor_list(i).sensor_position;
                 obj.sensor_sigmas(i) = obj.sensor_list(i).distance_noise_sigma;
-                obj.sensor_norm(i) = norm(obj.sensor_list(i).sensor_position)^2;
             end
         end
 
@@ -73,13 +70,13 @@ classdef non_iterative_estimator < handle
                 options.show_waitbar = false
             end
             show_waitbar = options.show_waitbar;
-
+            
             if show_waitbar
                 f = waitbar(0, "please wait");
             end
             
             for i = 1:size(obj.all_distances, 2)
-                current_point = obj.estimate_point_by_distances_non_iterative(obj.all_distances(:,i), obj.sensor_locations, obj.last_location);
+                current_point = obj.estimate_point_by_distances_deep_learning(obj.all_distances(:,i), obj.sensor_locations, obj.last_location);
                 obj.last_location = current_point;
                 estimated_path(i,:) = current_point;
                 if show_waitbar
