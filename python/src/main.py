@@ -1,5 +1,5 @@
 import numpy as np
-from src.simulation.generate_path import generate_path
+from simulation.generate_path import generate_path
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 # import simulation.create_simulations.save_simulation_MC
