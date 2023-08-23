@@ -11,7 +11,7 @@ class iterative_estimator:
 
         # Initialize functions
         self.dist_func = lambda sensor_pos, pos: (np.linalg.norm(pos - sensor_pos, 2, 1))
-        self.dist_derivative_func = lambda sensor_pos, pos: ((pos - sensor_pos) / np.linalg.norm(pos - sensor_pos, 2, 1))
+        self.dist_derivative_func = lambda sensor_pos, pos: ((pos - sensor_pos).T / np.linalg.norm(pos - sensor_pos, 2, 1)).T
 
     def estimate_point_by_distance(self, distances, last_estimate, iteration_limit=5, precision_limit=0.01, epsilon=0.1):
         # Initialize parameters with correct dimensions
@@ -27,7 +27,7 @@ class iterative_estimator:
             H = self.dist_derivative_func(self.sensor_locations, current_estimate.T)
 
             # Make sure H isn't singular
-            H = H + np.eye(H.shape[0]) * epsilon
+            H = H + np.eye(H.shape[0],H.shape[1]) * epsilon
             Z = np.linalg.inv(H.T @ H) @ H.T
             # Get better estimate
             current_estimate = Z @ (y - h_x0 + H @ current_estimate)
