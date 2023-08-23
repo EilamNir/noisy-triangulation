@@ -46,3 +46,12 @@ class iterative_estimator:
             self.last_location = current_estimate
             estimated_path[i,:] = current_estimate
         return estimated_path
+    
+    def get_cov_err(self, true_path):
+        path_cov_err = np.zeros(true_path.shape)
+        for i in range(true_path.shape[0]):
+            current_point = true_path[i,:]
+            H = self.dist_derivative_func(self.sensor_locations, current_point)
+            cov_vec = np.diag(np.linalg.inv(H.T @ H))
+            path_cov_err[i,:] = cov_vec.T
+        return path_cov_err
