@@ -1,22 +1,11 @@
 clear; close all; clc;
 %% create data
-load('train_path.mat')
-% XTrain = [];
-% YTrain = [];
-% for i = 3:length(path)-1
-%     XTrain = cat(4,XTrain, path(i-2:i,:));
-%     YTrain = cat(1,YTrain, path(i+1,:));
-% end
-% ix = randperm(length(YTrain));
-% 
-% XTrain = XTrain(:,:,:,ix);
-% YTrain = YTrain(ix,:);
-
+load('train_path_noise.mat')
 XTrain = noisy_distances;
 YTrain = path;
-load('train_path_const_sen.mat')
-XTrain = cat(4, XTrain, noisy_distances);
-YTrain = cat(1, YTrain, path);
+% load('train_path_const_sen.mat')
+% XTrain = cat(4, XTrain, noisy_distances);
+% YTrain = cat(1, YTrain, path);
 ix = randperm(length(YTrain));
 
 XTrain = XTrain(:,:,:,ix);
@@ -38,26 +27,20 @@ layers = [ ...
     
     convolution2dLayer(3,64, 'Padding','same')
     reluLayer
-    
     convolution2dLayer(3,64, 'Padding','same')
+    reluLayer 
+    convolution2dLayer(3,64, 'Padding','same')
+    reluLayer 
+    fullyConnectedLayer(64)
     reluLayer
-    
-    convolution2dLayer(3,64,'Padding','same')
-    reluLayer   
-    
-    convolution2dLayer(3,64,'Padding','same')
-    reluLayer
-    
-    dropoutLayer(0.3)
-    
     fullyConnectedLayer(1)
     regressionLayer];
 
 maxEpochs = 20;
 miniBatchSize = 256;
-GradientThreshold = 1;
-InitialLearnRate = 1e-2;
-LearnRateDropPeriod = 5;
+GradientThreshold = 2;
+InitialLearnRate = 1e-3;
+LearnRateDropPeriod = 3;
 
 optionsx = trainingOptions('adam', ...
     'LearnRateSchedule',"piecewise", ...

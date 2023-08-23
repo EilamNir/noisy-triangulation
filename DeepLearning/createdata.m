@@ -3,10 +3,11 @@ clear; close all; clc;
 noisy_distances = [];
 path = [];
 f = waitbar(0,'Please wait...');
-for i = 1:2000  
+data_number = 600;
+for i = 1:data_number  
     %SensorPos = [-5000,0,0; 400, -7400, 0; 800, 800, 0];
     SensorPos = randi([-7000, 7000],3,3);
-    %SensorPos = [-4000,0,0; 400, -3800, 0; 800, 800, 0];
+%    SensorPos = [-4000,0,0; 400, -3800, 0; 800, 800, 0];
     %TargetPos = [0,0,5000];
     TargetPos = randi([-7000, 7000], 1, 3);
     TargetSpeed_xy = 50;
@@ -24,14 +25,14 @@ for i = 1:2000
     
     for step = path1.path'
         perfect_distances = vecnorm(step - SensorPos,2,2);
-        tmp = cat(1, SensorPos, (perfect_distances + random('Normal', 0, 15, size(perfect_distances)))');
+        tmp = cat(1, SensorPos, (perfect_distances + random('Normal', 0, 30, size(perfect_distances)))');
         noisy_distances = cat(4, noisy_distances, tmp);
         path = cat(1, path, step');
     end
-    waitbar(i/2000,f,'Create your data');
+    waitbar(i/data_number,f,'Create your data');
 end
 close(f)
-save('train_path_const_sen.mat', 'path', 'noisy_distances');
+save('train_path_noise.mat', 'path', 'noisy_distances');
 %% 
 figure
 plot3(path(:,1), path(:,2), path(:,3))
