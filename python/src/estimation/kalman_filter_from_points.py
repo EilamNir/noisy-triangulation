@@ -2,7 +2,7 @@
 import numpy as np
 
 class kalman_filter_from_points:
-    def __init__(self, delta_t, sigma_a, sigma_v, non_diag_reduction_ratio, current_sample_reduction):
+    def __init__(self, delta_t, sigma_a, sigma_v, non_diag_reduction_ratio=1, current_sample_reduction=1):
 
         # Initialize parameters
         self.delta_t = delta_t
@@ -28,11 +28,11 @@ class kalman_filter_from_points:
 
         self.Q = self.G @ self.G.T * np.square(self.sigma_a)
     
-    def get_initial_state(self, x0, x1):
-        # v = (x1.T - x0.T) / self.delta_t
-        # x = (x1.T + x0.T) / 2
-        v = np.array([[50, 0, 10]]).T
-        x = np.array([[0, 0, 5000]]).T
+    def get_initial_state(self, initial_path, n):
+        x0 = initial_path[0,:,None]
+        x_n = initial_path[n,:,None]
+        v = (x_n - x0) / (self.delta_t * n)
+        x = x0
         X = self.v_to_X.T @ v + self.H.T @ x
         return X
     
@@ -49,10 +49,11 @@ class kalman_filter_from_points:
 
     def filter_path(self, noisy_path):
         estimated_path = np.copy(noisy_path)
-        X = self.get_initial_state(noisy_path[0,:,None], noisy_path[1,:,None])
+        avg_size = 10
+        X = self.get_initial_state(noisy_path[0:avg_size+1,:], avg_size)
         P = np.eye(6)
 
-        for i in range(2, noisy_path.shape[0]):
+        for i in range(noisy_path.shape[0]):
             X, P = self.kalman_step(X, P, noisy_path[i,:,None])
             current_point = self.H @ X
             estimated_path[i,:] = current_point.T
