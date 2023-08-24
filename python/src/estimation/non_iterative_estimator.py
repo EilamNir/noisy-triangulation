@@ -2,7 +2,7 @@
 import numpy as np
 
 class non_iterative_estimator:
-    def __init__(self, sensors, initial_guess_position):
+    def __init__(self, sensors, initial_guess_position=[0,0,0]):
 
         # Initialize parameters
         self.sensor_locations = sensors.sensor_locations

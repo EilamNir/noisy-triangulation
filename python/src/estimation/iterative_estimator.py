@@ -39,9 +39,11 @@ class iterative_estimator:
         
         return current_estimate.T
     
-    def estimate_path(self):
+    def estimate_path(self, override_path_init=None):
         estimated_path = np.zeros([self.distances.shape[0], self.sensor_locations.shape[1]])
         for i in range(self.distances.shape[0]):
+            if override_path_init is not None:
+                self.last_location = override_path_init[i,:]
             current_estimate = self.estimate_point_by_distance(self.distances[i,:], self.last_location)
             self.last_location = current_estimate
             estimated_path[i,:] = current_estimate
