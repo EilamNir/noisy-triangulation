@@ -8,6 +8,8 @@ classdef generate_path < handle
         TimeRes
         path
         time
+        state
+        state_key
     end
     methods
         function obj = generate_path(options)
@@ -26,6 +28,7 @@ classdef generate_path < handle
                 options.initial_speed_xy = 50 % m/s
                 options.initial_speed_z = 10 % m/s
                 options.TimeRes = 0.1 % s
+                options.state = 0
             end
             obj.position = options.initial_position;
             obj.phi = options.initial_phi;
@@ -35,6 +38,9 @@ classdef generate_path < handle
             obj.TimeRes = options.TimeRes;
             obj.path = obj.position;
             obj.time = [0];
+            obj.state = options.state;
+            obj.state_key = obj.state;
+            disp(obj.phi)
         end
 
         function add_straight_interval(obj, interval_duration, options)
@@ -49,8 +55,10 @@ classdef generate_path < handle
                 obj
                 interval_duration
                 options.phi = obj.phi
+                options.state = 0;
             end
             obj.phi = options.phi;
+            obj.state = options.state;
             obj.advance_path(interval_duration, 0, 0);
         end
         
@@ -65,9 +73,10 @@ classdef generate_path < handle
                 interval_duration % seconds
                 rotation_speed % radians per second
                 options.z_acceleration = 0 % m/s^2
+                options.state = 1;
             end
+            obj.state = options.state;
             obj.advance_path(interval_duration, options.z_acceleration, rotation_speed);
-            
         end
 
         function add_3d_turn_interval(obj, interval_duration, rotation_speed, angle)
@@ -101,6 +110,7 @@ classdef generate_path < handle
                 obj.position(3) = obj.position(3) + (obj.TimeRes * obj.speed_z);
                 obj.path(end+1,:) = obj.position;
                 obj.time(end+1) = obj.time(end) + obj.TimeRes;
+                obj.state_key(end+1) = obj.state;
 
                 obj.phi = mod(obj.phi - obj.TimeRes * phi_rotation_speed, 2*pi);
             end
