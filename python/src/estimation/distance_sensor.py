@@ -16,11 +16,11 @@ class distance_sensors:
         self.noisy_distances = self.perfect_distances + np.random.normal(self.mu, self.sigma, self.perfect_distances.shape)
         
 
-if __name__ == "__main__":
-    # minimal testing to check everything is working as intended
-    ds = distance_sensors([[100,0,0], [0,100,0], [0,0,100], [100,0,100]], 5)
-    ds.calculate_measurements(np.array([[0,0,0], [0,10,0], [0,20,0], [0,30,0], [0,100,0]]))
-    print(f"{ds.sensor_locations=}")
-    print(f"{ds.noisy_distances=}")
-    print(f"{ds.perfect_distances=}")
-    print(f"{ds.perfect_distances - ds.noisy_distances=}")
+# if __name__ == "__main__":
+#     # minimal testing to check everything is working as intended
+#     ds = distance_sensors([[100,0,0], [0,100,0], [0,0,100], [100,0,100]], 5)
+#     ds.calculate_measurements(np.array([[0,0,0], [0,10,0], [0,20,0], [0,30,0], [0,100,0]]))
+#     print(f"{ds.sensor_locations=}")
+#     print(f"{ds.noisy_distances=}")
+#     print(f"{ds.perfect_distances=}")
+#     print(f"{ds.perfect_distances - ds.noisy_distances=}")

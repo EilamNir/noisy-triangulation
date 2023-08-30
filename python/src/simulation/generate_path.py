@@ -21,6 +21,8 @@ class generate_path:
         self.time_res = time_res
         self.path = np.array(initial_position, dtype=np.float64)
         self.time = [0]
+        self.state = [0]
+        self.state_key = [0]
 
 
     def add_straight_interval(self, interval_duration):
@@ -31,6 +33,7 @@ class generate_path:
     # Add a straight interval to the path.
     # interval_duration is the total length of the path to add.
     # If any of theta or phi are given, the heading will change before the interval.
+        self.state = [0]
         self.advance_path(interval_duration, 0)
 
 
@@ -40,6 +43,7 @@ class generate_path:
     # Syntax: add_xy_turn_interval(obj, rotation_speed)
     #
     # Add a turn interval, which has a constant radius, and can climb or descend in the z axis.
+        self.state = [1]
         self.advance_path(interval_duration, rotation_speed)
 
 
@@ -55,6 +59,7 @@ class generate_path:
             self.position[2] = self.position[2] + (self.time_res * self.speed_z)
             self.path = np.vstack((self.path, self.position))
             self.time = np.vstack((self.time, self.time[-1] + self.time_res))
+            self.state_key = np.vstack((self.state_key, self.state))
 
             self.phi = (self.phi - self.time_res * phi_rotation_speed) % (2 * np.pi)
             # print(f"{self.position=}")
