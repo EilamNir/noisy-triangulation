@@ -13,14 +13,16 @@ from tqdm import tqdm
 def generate_data(output_filename, run_number):
     sensor_amount = 3
     past_sample_len = 10
+    filled_len = 0
+    time_res = 0.5
     
     # dict to fill with data
     train_data = {
-        "sensor_locations":np.zeros((sensor_amount,3,past_sample_len,0)),
-        "true_path":np.zeros((1,3,past_sample_len,0)),
-        "dual_estimate_path":np.zeros((1,3,past_sample_len,0)),
-        "kf_estimate_path":np.zeros((1,3,past_sample_len,0)),
-        "state_key":np.zeros((0,1)),
+        "sensor_locations":np.zeros((sensor_amount,3,past_sample_len,run_number*(200 * int(1/time_res)))),
+        "true_path":np.zeros((1,3,past_sample_len,run_number*(200 * int(1/time_res)))),
+        "dual_estimate_path":np.zeros((1,3,past_sample_len,run_number*(200 * int(1/time_res)))),
+        "kf_estimate_path":np.zeros((1,3,past_sample_len,run_number*(200 * int(1/time_res)))),
+        "state_key":np.zeros((run_number*(200 * int(1/time_res)),1)),
     }
 
     # generate the data
@@ -30,11 +32,11 @@ def generate_data(output_filename, run_number):
         target_speed_xy = 50
         target_speed_z = 10
         target_rot_speed = 3
-        time_res = 0.5
 
         path1 = generate_path(np.deg2rad(np.random.randint(0,360,size=1)[0]), target_speed_xy, target_speed_z, target_initial_pos, time_res)
         path1.add_straight_interval(np.random.randint(10,100,size=1)[0])
         path1.add_xy_turn_interval(np.random.randint(10,100,size=1)[0], -random.choice([-1, 1])*np.deg2rad(target_rot_speed))
+        total_len = len(path1.path)
 
         # create noisy sensors
         sensors = distance_sensors(sensors_pos, 20)
@@ -46,12 +48,19 @@ def generate_data(output_filename, run_number):
         dual_est_path = dual_est.estimate_path()
         kf_path_acc = kf_acc.filter_path(dual_est_path)
 
-        for i in range(len(path1.path) - past_sample_len + 1):
-            train_data["sensor_locations"] = np.concatenate((train_data["sensor_locations"], np.repeat(sensors.sensor_locations.reshape(sensor_amount,3,1,1), past_sample_len, axis=2)), axis=3)
-            train_data["true_path"] = np.concatenate((train_data["true_path"], path1.path[i:i+past_sample_len,:].T.reshape(1,3,past_sample_len,1)), axis=3)
-            train_data["dual_estimate_path"] = np.concatenate((train_data["dual_estimate_path"], kf_path_acc[i:i+past_sample_len,:].T.reshape(1,3,past_sample_len,1)), axis=3)
-            train_data["kf_estimate_path"] = np.concatenate((train_data["kf_estimate_path"], dual_est_path[i:i+past_sample_len,:].T.reshape(1,3,past_sample_len,1)), axis=3)
-        train_data["state_key"] = np.concatenate((train_data["state_key"], path1.state_key[past_sample_len-1:]), 0)
+        for i in range(total_len - past_sample_len + 1):
+            train_data["sensor_locations"][:,:,:,filled_len+i] = np.repeat(sensors.sensor_locations.reshape(sensor_amount,3,1), past_sample_len, axis=2)
+            train_data["true_path"][:,:,:,filled_len+i] = path1.path[i:i+past_sample_len,:].T.reshape(1,3,past_sample_len)
+            train_data["dual_estimate_path"][:,:,:,filled_len+i] = kf_path_acc[i:i+past_sample_len,:].T.reshape(1,3,past_sample_len)
+            train_data["kf_estimate_path"][:,:,:,filled_len+i] = dual_est_path[i:i+past_sample_len,:].T.reshape(1,3,past_sample_len)
+        train_data["state_key"][filled_len:filled_len+total_len-past_sample_len+1,:] = path1.state_key[past_sample_len-1:]
+        filled_len += total_len-past_sample_len+1
+    
+    train_data["sensor_locations"] = train_data["sensor_locations"][:,:,:,:filled_len]
+    train_data["true_path"] = train_data["true_path"][:,:,:,:filled_len]
+    train_data["dual_estimate_path"] = train_data["dual_estimate_path"][:,:,:,:filled_len]
+    train_data["kf_estimate_path"] = train_data["kf_estimate_path"][:,:,:,:filled_len]
+    train_data["state_key"] = train_data["state_key"][:filled_len,:]
 
     # save data to file
     print(f"saving data to {output_filename}")
