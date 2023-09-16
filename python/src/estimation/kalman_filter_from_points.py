@@ -49,8 +49,8 @@ class kalman_filter_from_points:
 
     def filter_path(self, noisy_path):
         estimated_path = np.copy(noisy_path)
-        save_p = np.empty(noisy_path.shape[0])
-        save_x = np.empty((3, noisy_path.shape[0]))
+        save_p = np.empty((noisy_path.shape[0], 6, 6))
+        save_x = np.empty((noisy_path.shape[0], 6))
         avg_size = 10
         X = self.get_initial_state(noisy_path[0:avg_size+1, :], avg_size)
         P = np.eye(6)
@@ -59,7 +59,7 @@ class kalman_filter_from_points:
             X, P = self.kalman_step(X, P, noisy_path[i, :, None])
             current_point = self.H @ X
             estimated_path[i, :] = current_point.T
-            save_p[i] = P
+            save_p[i, :, :] = P
             save_x[i, :] = X.T
 
         return estimated_path, save_p, save_x
