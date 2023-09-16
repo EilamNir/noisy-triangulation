@@ -49,23 +49,27 @@ class kalman_filter_from_points:
 
     def filter_path(self, noisy_path):
         estimated_path = np.copy(noisy_path)
+        save_p = np.empty(noisy_path.shape[0])
+        save_x = np.empty((3, noisy_path.shape[0]))
         avg_size = 10
-        X = self.get_initial_state(noisy_path[0:avg_size+1,:], avg_size)
+        X = self.get_initial_state(noisy_path[0:avg_size+1, :], avg_size)
         P = np.eye(6)
 
         for i in range(noisy_path.shape[0]):
-            X, P = self.kalman_step(X, P, noisy_path[i,:,None])
+            X, P = self.kalman_step(X, P, noisy_path[i, :, None])
             current_point = self.H @ X
-            estimated_path[i,:] = current_point.T
+            estimated_path[i, :] = current_point.T
+            save_p[i] = P
+            save_x[i, :] = X.T
 
-        return estimated_path
+        return estimated_path, save_p, save_x
 
 
 
 
-if __name__ == "__main__":
-    kf = kalman_filter_from_points(0.5, 1, 100, 2, 1)
-    print(f"{kf.F=} \n{kf.G=} \n{kf.H=} \n{kf.v_to_X=} \n{kf.Q=}")
-    print(f"{kf.F.shape=} \n{kf.G.shape=} \n{kf.H.shape=} \n{kf.v_to_X.shape=} \n{kf.Q.shape=}")
-    filtered_path = kf.filter_path(np.array([[1,1,1], [1,1,2], [2,2,3], [2,2,3], [2,2,4], [2,2,5]]))
-    print(f"{filtered_path=}")
+# if __name__ == "__main__":
+#     kf = kalman_filter_from_points(0.5, 1, 100, 2, 1)
+#     print(f"{kf.F=} \n{kf.G=} \n{kf.H=} \n{kf.v_to_X=} \n{kf.Q=}")
+#     print(f"{kf.F.shape=} \n{kf.G.shape=} \n{kf.H.shape=} \n{kf.v_to_X.shape=} \n{kf.Q.shape=}")
+#     filtered_path = kf.filter_path(np.array([[1,1,1], [1,1,2], [2,2,3], [2,2,3], [2,2,4], [2,2,5]]))
+#     print(f"{filtered_path=}")
