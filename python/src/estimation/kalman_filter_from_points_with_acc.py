@@ -44,25 +44,30 @@ class kalman_filter_from_points_acc:
         P = P - L_k @ self.H @ P
         # reduce anything in P that is not on the diagonal
         P = (np.diag(np.diag(P)) * (self.non_diag_reduction_ratio - 1) + P) / self.non_diag_reduction_ratio
-        return X, P
+        return X, P, self.H @ P @ self.H.T, (current_point - self.H @ X)
         
 
     def filter_path(self, noisy_path):
         estimated_path = np.copy(noisy_path)
         save_p = np.empty((noisy_path.shape[0], 9, 9))
         save_x = np.empty((noisy_path.shape[0], 9))
+        save_L = np.empty((noisy_path.shape[0], 9))
+        save_delta_x = np.empty((noisy_path.shape[0],3))
         avg_size = 2
         X = self.get_initial_state(noisy_path[0:avg_size+1, :], avg_size)
         P = 1000*np.eye(9)
 
         for i in range(noisy_path.shape[0]):
-            X, P = self.kalman_step(X, P, noisy_path[i,:,None])
+            X, P, L, delta_x = self.kalman_step(X, P, noisy_path[i,:,None])
             current_point = self.H @ X
             estimated_path[i,:] = current_point.T
             save_p[i, :, :] = P
             save_x[i, :] = X.T
+            save_L[i, :] = L.reshape(1, -1)
+            save_delta_x[i, :] = delta_x.reshape(1, -1)
 
-        return estimated_path, save_p, save_x
+        return estimated_path
+        #return estimated_path, save_p, save_x, save_L, save_delta_x
 
 
 
