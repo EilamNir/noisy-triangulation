@@ -2,7 +2,7 @@
 import numpy as np
 
 class kalman_filter_with_mahalanobis:
-    def __init__(self, delta_t, sigma_a, sigma_v, non_diag_reduction_ratio=1, current_sample_reduction=1, mahalanobis_threshold=3):
+    def __init__(self, delta_t, sigma_a, sigma_v, non_diag_reduction_ratio=1, current_sample_reduction=1, mahalanobis_threshold=3, initial_P_multiplier=1000):
 
         # Initialize parameters
         self.delta_t = delta_t
@@ -11,6 +11,7 @@ class kalman_filter_with_mahalanobis:
         self.non_diag_reduction_ratio = non_diag_reduction_ratio
         self.current_sample_reduction = current_sample_reduction
         self.mahalanobis_threshold = mahalanobis_threshold
+        self.initial_P_multiplier = initial_P_multiplier
         self.init_matrixes(delta_t)
 
     def init_matrixes(self, delta_t):
@@ -64,7 +65,7 @@ class kalman_filter_with_mahalanobis:
         save_delta_x = np.empty((noisy_path.shape[0],3))
         avg_size = 2
         X = self.get_initial_state(noisy_path[0:avg_size+1, :], avg_size)
-        P = 1000*np.eye(9)
+        P = self.initial_P_multiplier*np.eye(9)
 
         for i in range(noisy_path.shape[0]):
             X, P, L, delta_x = self.kalman_step(X, P, noisy_path[i,:,None])

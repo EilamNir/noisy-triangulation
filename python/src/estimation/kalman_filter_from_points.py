@@ -2,7 +2,7 @@
 import numpy as np
 
 class kalman_filter_from_points:
-    def __init__(self, delta_t, sigma_a, sigma_v, non_diag_reduction_ratio=1, current_sample_reduction=1):
+    def __init__(self, delta_t, sigma_a, sigma_v, non_diag_reduction_ratio=1, current_sample_reduction=1, initial_P_multiplier=1000):
 
         # Initialize parameters
         self.delta_t = delta_t
@@ -10,6 +10,7 @@ class kalman_filter_from_points:
         self.sigma_v = sigma_v
         self.non_diag_reduction_ratio = non_diag_reduction_ratio
         self.current_sample_reduction = current_sample_reduction
+        self.initial_P_multiplier = initial_P_multiplier
         self.init_matrixes(delta_t)
 
     def init_matrixes(self, delta_t):
@@ -53,7 +54,7 @@ class kalman_filter_from_points:
         save_x = np.empty((noisy_path.shape[0], 6))
         avg_size = 10
         X = self.get_initial_state(noisy_path[0:avg_size+1, :], avg_size)
-        P = np.eye(6)
+        P = self.initial_P_multiplier*np.eye(6)
 
         for i in range(noisy_path.shape[0]):
             X, P = self.kalman_step(X, P, noisy_path[i, :, None])
