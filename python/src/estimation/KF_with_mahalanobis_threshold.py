@@ -46,7 +46,6 @@ class kalman_filter_with_mahalanobis:
         mahalanobis_dist = np.sqrt(innovation.T @ Sigma @ innovation / X.size)
         if mahalanobis_dist > self.mahalanobis_threshold:
             # TODO: Advance X and P only based on physics, without taking into account current measurement
-            print(f"skipping step, {mahalanobis_dist=}>{self.mahalanobis_threshold}")
             pass
         else:
             # Advance based on physics and measurement
