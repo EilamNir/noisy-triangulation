@@ -38,45 +38,62 @@ class kalman_filter_with_mahalanobis:
         X = self.v_to_X.T @ v + self.H.T @ x
         return X
     
-    def kalman_step(self, last_X, last_P, current_point):
+    def kalman_step(self, last_X, last_P, current_point, current_cov):
         P = self.F @ last_P @ self.F.T + self.Q
-        Sigma = np.linalg.inv(self.H @ P @ self.H.T + np.eye(3) * np.square(self.sigma_v))
+        Sigma = np.linalg.inv(self.H @ P @ self.H.T + current_cov)
         L_k = P @ self.H.T @ Sigma
         X = self.F @ last_X
         innovation = (current_point - self.H @ X)
-        mahalanobis_dist = np.sqrt(innovation.T @ Sigma @ innovation / X.size)
+        mahalanobis_dist = np.sqrt(innovation.T @ Sigma @ innovation / current_point.size)
+        skipped_sample = 0
         if mahalanobis_dist > self.mahalanobis_threshold:
-            # TODO: Advance X and P only based on physics, without taking into account current measurement
-            pass
+            # Advance X and P only based on physics, without taking into account current measurement
+            skipped_sample = 1
         else:
-            # Advance based on physics and measurement
+            # Advance based on physics and measurement, by updating X and P according to the optimal kalman gain
             X = X + self.current_sample_reduction * L_k @ innovation
             P = P - L_k @ self.H @ P
-        # reduce anything in P that is not on the diagonal
-        P = (np.diag(np.diag(P)) * (self.non_diag_reduction_ratio - 1) + P) / self.non_diag_reduction_ratio
-        return X, P, self.H @ P @ self.H.T, innovation
-        
+            # reduce anything in P that is not on the diagonal
+            P = (np.diag(np.diag(P)) * (self.non_diag_reduction_ratio - 1) + P) / self.non_diag_reduction_ratio
+        return X, P, self.H @ P @ self.H.T, innovation, skipped_sample, mahalanobis_dist
 
-    def filter_path(self, noisy_path):
+
+    def filter_path(self, noisy_path, cov, outlier_max=None):
         estimated_path = np.copy(noisy_path)
         save_p = np.empty((noisy_path.shape[0], 9, 9))
         save_x = np.empty((noisy_path.shape[0], 9))
         save_L = np.empty((noisy_path.shape[0], 9))
         save_delta_x = np.empty((noisy_path.shape[0],3))
+        skipped_samples = np.empty((noisy_path.shape[0]))
+        mahalanobis_dists = np.empty((noisy_path.shape[0]))
         avg_size = 2
         X = self.get_initial_state(noisy_path[0:avg_size+1, :], avg_size)
         P = self.initial_P_multiplier*np.eye(9)
+        consecutive_outliers = 0
 
         for i in range(noisy_path.shape[0]):
-            X, P, L, delta_x = self.kalman_step(X, P, noisy_path[i,:,None])
+            X, P, L, delta_x, skipped_sample, mahalanobis_dist = self.kalman_step(X, P, noisy_path[i,:,None], cov[i, :])
             current_point = self.H @ X
             estimated_path[i,:] = current_point.T
             save_p[i, :, :] = P
             save_x[i, :] = X.T
             save_L[i, :] = L.reshape(1, -1)
             save_delta_x[i, :] = delta_x.reshape(1, -1)
+            skipped_samples[i] = skipped_sample
+            mahalanobis_dists[i] = mahalanobis_dist
 
-        return estimated_path
+            if outlier_max is not None:
+                if not skipped_sample:
+                    consecutive_outliers = 0
+                else:
+                    consecutive_outliers += 1
+                if consecutive_outliers >= outlier_max:
+                    X = self.get_initial_state(noisy_path[i:i+avg_size+1, :], avg_size)
+                    P = self.initial_P_multiplier*np.eye(9)
+                    consecutive_outliers = 0
+                    print("reseting filter")
+
+        return estimated_path, skipped_samples, mahalanobis_dists
         #return estimated_path, save_p, save_x, save_L, save_delta_x
 
 

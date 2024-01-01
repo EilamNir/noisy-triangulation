@@ -38,10 +38,10 @@ class improved_kalman_filter_from_points_acc:
         X = self.v_to_X.T @ v + self.H.T @ x
         return X
 
-    def kalman_step(self, current_point, last_p, last_x, last_L, last_delta_x, model):
+    def kalman_step(self, current_point, last_p, last_x, last_L, last_delta_x, model, current_cov):
 
         P = self.F @ last_p @ self.F.T + self.Q
-        L_k = P @ self.H.T @ np.linalg.inv(self.H @ P @ self.H.T + np.eye(3) * np.square(self.sigma_v))
+        L_k = P @ self.H.T @ np.linalg.inv(self.H @ P @ self.H.T + current_cov)
         X = self.F @ last_x
         x_new = X + self.current_sample_reduction * L_k @ (current_point - self.H @ X)
         p_new = P - L_k @ self.H @ P
@@ -62,8 +62,8 @@ class improved_kalman_filter_from_points_acc:
                         self.non_diag_reduction_ratio - 1) + p_new) / self.non_diag_reduction_ratio
 
         return x_new, p_new, L_new, delta_x_new
-
-    def filter_path(self, noisy_path):
+    
+    def filter_path(self, noisy_path, cov):
         estimated_path = np.copy(noisy_path)
         save_p = np.empty((noisy_path.shape[0], 9, 9))
         save_x = np.empty((noisy_path.shape[0], 9))
@@ -81,7 +81,7 @@ class improved_kalman_filter_from_points_acc:
         model.eval()
 
         for i in range(noisy_path.shape[0]):
-            X, P, L, delta_x = self.kalman_step(noisy_path[i, :, None], P, X, L, delta_x, model)
+            X, P, L, delta_x = self.kalman_step(noisy_path[i, :, None], P, X, L, delta_x, model, cov[i, :])
             current_point = self.H @ X
             estimated_path[i, :] = current_point.T
             save_p[i, :, :] = P
