@@ -57,3 +57,12 @@ class iterative_estimator:
             cov_vec = np.diag(np.linalg.inv(H.T @ H))
             path_cov_err[i,:] = cov_vec.T
         return path_cov_err
+
+    def get_cov_err_for_kf(self, true_path):
+        path_cov_err = np.zeros((true_path.shape[0], 3, 3))
+        for i in range(true_path.shape[0]):
+            current_point = true_path[i,:]
+            H = self.dist_derivative_func(self.sensor_locations, current_point)
+            cov_vec = np.linalg.inv(H.T @ H) @ (np.eye(3) * (15**2))
+            path_cov_err[i, :, :] = cov_vec
+        return path_cov_err

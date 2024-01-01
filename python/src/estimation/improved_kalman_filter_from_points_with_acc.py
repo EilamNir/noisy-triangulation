@@ -60,13 +60,14 @@ class improved_kalman_filter_from_points_acc:
             p_new = (np.diag(np.diag(p_new)) * (
                         self.non_diag_reduction_ratio - 1) + p_new) / self.non_diag_reduction_ratio
 
-        return x_new, p_new, L_new, delta_x_new
+        return x_new, p_new, L_new, delta_x_new, outputs
 
     def filter_path(self, noisy_path):
         estimated_path = np.copy(noisy_path)
         save_p = np.empty((noisy_path.shape[0], 9, 9))
         save_x = np.empty((noisy_path.shape[0], 9))
         save_L = np.empty((noisy_path.shape[0], 9))
+        outputs = np.empty((noisy_path.shape[0]))
         save_delta_x = np.empty((noisy_path.shape[0], 3))
         avg_size = 2
         X = self.get_initial_state(noisy_path[0:avg_size + 1, :], avg_size)
@@ -80,15 +81,16 @@ class improved_kalman_filter_from_points_acc:
         model.eval()
 
         for i in range(noisy_path.shape[0]):
-            X, P, L, delta_x = self.kalman_step(noisy_path[i, :, None], P, X, L, delta_x, model)
+            X, P, L, delta_x, output= self.kalman_step(noisy_path[i, :, None], P, X, L, delta_x, model)
             current_point = self.H @ X
             estimated_path[i, :] = current_point.T
             save_p[i, :, :] = P
             save_x[i, :] = X.T
             save_L[i, :] = L.reshape(1, -1)
             save_delta_x[i, :] = delta_x.reshape(1, -1)
+            outputs[i] = output
 
-        return estimated_path
+        return estimated_path, outputs
 
 
 class state_estimat(nn.Module):
