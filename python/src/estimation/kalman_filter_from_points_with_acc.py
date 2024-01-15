@@ -36,7 +36,7 @@ class kalman_filter_from_points_acc:
         X = self.v_to_X.T @ v + self.H.T @ x
         return X
     
-    def kalman_step(self, last_X, last_P, current_point):
+    def kalman_step(self, last_X, last_P, current_point, current_cov):
         P = self.F @ last_P @ self.F.T + self.Q
         L_k = P @ self.H.T @ np.linalg.inv(self.H @ P @ self.H.T + np.eye(3) * np.square(self.sigma_v))
         X = self.F @ last_X
@@ -47,7 +47,7 @@ class kalman_filter_from_points_acc:
         return X, P, self.H @ P @ self.H.T, (current_point - self.H @ X)
         
 
-    def filter_path(self, noisy_path):
+    def filter_path(self, noisy_path, cov):
         estimated_path = np.copy(noisy_path)
         save_p = np.empty((noisy_path.shape[0], 9, 9))
         save_x = np.empty((noisy_path.shape[0], 9))
@@ -58,7 +58,7 @@ class kalman_filter_from_points_acc:
         P = 1000*np.eye(9)
 
         for i in range(noisy_path.shape[0]):
-            X, P, L, delta_x = self.kalman_step(X, P, noisy_path[i,:,None])
+            X, P, L, delta_x = self.kalman_step(X, P, noisy_path[i,:,None], cov[i,:])
             current_point = self.H @ X
             estimated_path[i,:] = current_point.T
             save_p[i, :, :] = P

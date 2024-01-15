@@ -58,7 +58,7 @@ class kalman_filter_from_points_acc:
         save_delta_x = np.empty((noisy_path.shape[0], 3))
         avg_size = 2
         X = self.get_initial_state(noisy_path[0:avg_size + 1, :], avg_size)
-        P = 1000 * np.eye(9)
+        P = 10000 * np.eye(9)
 
         for i in range(noisy_path.shape[0]):
             X, P, L, delta_x = self.kalman_step(X, P, noisy_path[i, :, None], cov[i, :])

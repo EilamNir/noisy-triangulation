@@ -56,11 +56,14 @@ class improved_kalman_filter_from_points_acc:
         outputs = model(torch.from_numpy(input).unsqueeze(0).float())
         if outputs[0,0].item() > 0.2:
             x_new = X
-            p_new = P
-            p_new = (np.diag(np.diag(p_new)) * (
-                        self.non_diag_reduction_ratio - 1) + p_new) / self.non_diag_reduction_ratio
+            delta_x_new = (current_point - self.H @ x_new)
+            #p_new = P
+            #p_new = (np.diag(np.diag(p_new)) * (
+            #            self.non_diag_reduction_ratio - 1) + p_new) / self.non_diag_reduction_ratio
 
-        return x_new, p_new, L_new, delta_x_new, outputs
+        #return x_new, p_new, L_new, delta_x_new, outputs
+
+        return x_new, p_new, L_new, delta_x_new
 
     def filter_path(self, noisy_path):
         estimated_path = np.copy(noisy_path)
@@ -71,7 +74,7 @@ class improved_kalman_filter_from_points_acc:
         save_delta_x = np.empty((noisy_path.shape[0], 3))
         avg_size = 2
         X = self.get_initial_state(noisy_path[0:avg_size + 1, :], avg_size)
-        P = 1000 * np.eye(9)
+        P = 10000 * np.eye(9)
         L = np.zeros((9,1))
         delta_x = np.zeros((3,1))
 
@@ -81,16 +84,18 @@ class improved_kalman_filter_from_points_acc:
         model.eval()
 
         for i in range(noisy_path.shape[0]):
-            X, P, L, delta_x, output= self.kalman_step(noisy_path[i, :, None], P, X, L, delta_x, model)
+            #X, P, L, delta_x, output= self.kalman_step(noisy_path[i, :, None], P, X, L, delta_x, model)
+            X, P, L, delta_x = self.kalman_step(noisy_path[i, :, None], P, X, L, delta_x, model)
             current_point = self.H @ X
             estimated_path[i, :] = current_point.T
             save_p[i, :, :] = P
             save_x[i, :] = X.T
             save_L[i, :] = L.reshape(1, -1)
             save_delta_x[i, :] = delta_x.reshape(1, -1)
-            outputs[i] = output
+            #outputs[i] = output
 
-        return estimated_path, outputs
+        #return estimated_path, outputs
+        return estimated_path
 
 
 class state_estimat(nn.Module):
