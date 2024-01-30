@@ -58,7 +58,7 @@ class kalman_filter_with_mahalanobis:
         return X, P, self.H @ P @ self.H.T, innovation, skipped_sample, mahalanobis_dist
 
 
-    def filter_path(self, noisy_path, cov, outlier_max=None):
+    def filter_path(self, noisy_path, cov, outlier_max=None, should_return_velocity=False):
         estimated_path = np.copy(noisy_path)
         save_p = np.empty((noisy_path.shape[0], 9, 9))
         save_x = np.empty((noisy_path.shape[0], 9))
@@ -92,6 +92,11 @@ class kalman_filter_with_mahalanobis:
                     P = self.initial_P_multiplier*np.eye(9)
                     consecutive_outliers = 0
                     print("reseting filter")
+
+
+        if should_return_velocity:
+            estimated_velocity = np.array([save_x[:,1], save_x[:,4], save_x[:,7]])
+            return estimated_path, skipped_samples, mahalanobis_dists, estimated_velocity
 
         return estimated_path, skipped_samples, mahalanobis_dists
         #return estimated_path, save_p, save_x, save_L, save_delta_x

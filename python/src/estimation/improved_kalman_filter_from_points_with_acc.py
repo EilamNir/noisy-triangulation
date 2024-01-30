@@ -63,7 +63,7 @@ class improved_kalman_filter_from_points_acc:
 
         return x_new, p_new, L_new, delta_x_new
     
-    def filter_path(self, noisy_path, cov):
+    def filter_path(self, noisy_path, cov, should_return_velocity=False):
         estimated_path = np.copy(noisy_path)
         save_p = np.empty((noisy_path.shape[0], 9, 9))
         save_x = np.empty((noisy_path.shape[0], 9))
@@ -89,6 +89,9 @@ class improved_kalman_filter_from_points_acc:
             save_L[i, :] = L.reshape(1, -1)
             save_delta_x[i, :] = delta_x.reshape(1, -1)
 
+        if should_return_velocity:
+            estimated_velocity = np.array([save_x[:,1], save_x[:,4], save_x[:,7]])
+            return estimated_path, estimated_velocity
         return estimated_path
 
 
