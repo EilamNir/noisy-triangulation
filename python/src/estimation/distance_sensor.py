@@ -27,6 +27,7 @@ class distance_sensors:
 
             self.noisy_distances = self.perfect_distances + noise * (~outliers) + outlier_noise * outliers
             self.outlier_distances = np.any(outliers, 1)
+            self.outliers = outliers
 
 
 # if __name__ == "__main__":
